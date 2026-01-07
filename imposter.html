@@ -1,0 +1,1857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imposter Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            touch-action: none;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .card {
+            flex: 1;
+            margin: 20px;
+            background: rgba(30, 30, 46, 0.95);
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .cover {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #0f3460 0%, #16537e 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: grab;
+            z-index: 10;
+            user-select: none;
+            will-change: transform;
+            border-radius: 30px;
+        }
+
+        .cover:active {
+            cursor: grabbing;
+        }
+
+        .cover.snapping {
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .player-header-on-cover {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 30px 20px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            border-radius: 30px 30px 0 0;
+        }
+
+        .player-number {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .player-number-value {
+            display: inline-block;
+            padding: 5px 20px;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .player-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .cover-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .cover-text {
+            font-size: 28px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .setup-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            z-index: 100;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            border-radius: 30px;
+        }
+
+        .setup-screen.hidden {
+            opacity: 0;
+            transform: scale(0.9);
+            pointer-events: none;
+        }
+
+        .setup-title {
+            font-size: 36px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+        }
+
+        .top-controls {
+            width: 100%;
+            max-width: 300px;
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .roles-toggle-compact {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .roles-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .help-icon {
+            width: 18px;
+            height: 18px;
+            background: rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            color: #667eea;
+            font-size: 12px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .help-icon:hover {
+            background: rgba(102, 126, 234, 0.5);
+            transform: scale(1.1);
+        }
+
+        .toggle-label-small {
+            font-size: 12px;
+            color: #cbd5e0;
+            font-weight: 600;
+        }
+
+        .toggle-switch-small {
+            position: relative;
+            width: 40px;
+            height: 20px;
+            background: #2d3748;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .toggle-switch-small.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .toggle-slider-small {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-switch-small.active .toggle-slider-small {
+            transform: translateX(20px);
+        }
+
+        .names-button-compact {
+            flex: 1;
+            padding: 8px 12px;
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .names-button-compact:hover {
+            background: rgba(102, 126, 234, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .setup-group {
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 15px;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            margin-top: 8px;
+        }
+
+        .toggle-label {
+            font-size: 14px;
+            color: #cbd5e0;
+            font-weight: 600;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background: #2d3748;
+            border-radius: 13px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(24px);
+        }
+
+        .names-button {
+            width: 100%;
+            padding: 12px;
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 8px;
+        }
+
+        .names-button:hover {
+            background: rgba(102, 126, 234, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .names-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .names-section {
+            width: 100%;
+            max-width: 300px;
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .names-section.hidden {
+            display: none;
+        }
+
+        .names-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            flex-direction: column;
+            padding: 40px;
+            z-index: 100;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            border-radius: 30px;
+            overflow-y: auto;
+        }
+
+        .names-screen.hidden {
+            opacity: 0;
+            transform: scale(0.9);
+            pointer-events: none;
+        }
+
+        .names-screen-title {
+            font-size: 28px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .names-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .name-input-group {
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .name-input-label {
+            font-size: 14px;
+            color: #cbd5e0;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .name-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .name-input {
+            width: 100%;
+            padding: 10px 35px 10px 10px;
+            font-size: 16px;
+            border: 2px solid #2d3748;
+            background: #1a202c;
+            color: #e2e8f0;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .name-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+        }
+
+        .clear-name-btn {
+            position: absolute;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            background: rgba(239, 68, 68, 0.2);
+            border: none;
+            border-radius: 50%;
+            color: #ef4444;
+            font-size: 14px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .clear-name-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
+            transform: scale(1.1);
+        }
+
+        .name-input-wrapper:hover .clear-name-btn,
+        .name-input:focus + .clear-name-btn {
+            display: flex;
+        }
+
+        .names-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .back-button {
+            flex: 1;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .roles-help-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            flex-direction: column;
+            padding: 30px;
+            z-index: 100;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            border-radius: 30px;
+            overflow-y: auto;
+        }
+
+        .roles-help-screen.hidden {
+            opacity: 0;
+            transform: scale(0.9);
+            pointer-events: none;
+        }
+
+        .roles-help-title {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .role-help-card {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid;
+        }
+
+        .role-help-card.jester { border-left-color: #f59e0b; }
+        .role-help-card.double-agent { border-left-color: #dc2626; }
+        .role-help-card.protector { border-left-color: #10b981; }
+        .role-help-card.framer { border-left-color: #8b5cf6; }
+        .role-help-card.informant { border-left-color: #3b82f6; }
+
+        .role-help-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .role-help-desc {
+            font-size: 13px;
+            color: #cbd5e0;
+            line-height: 1.5;
+        }
+
+        .role-help-team {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .setup-label {
+            display: block;
+            font-size: 16px;
+            font-weight: 600;
+            color: #cbd5e0;
+            margin-bottom: 10px;
+        }
+
+        .setup-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: 2px solid #2d3748;
+            background: #1a202c;
+            color: #e2e8f0;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .setup-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+        }
+
+        .slider-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .carousel-selector {
+            width: 100%;
+            height: 80px;
+            position: relative;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            mask-image: linear-gradient(to right, transparent, black 20%, black 80%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 20%, black 80%, transparent);
+        }
+
+        .carousel-track {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .carousel-item {
+            min-width: 100px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: #4a5568;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .carousel-item.active {
+            font-size: 56px;
+            color: #667eea;
+            transform: scale(1.3);
+        }
+
+        .carousel-item:hover {
+            color: #9ca3af;
+        }
+
+        .carousel-selector::before,
+        .carousel-selector::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, transparent, #667eea, transparent);
+            z-index: 10;
+        }
+
+        .carousel-selector::before {
+            left: calc(50% - 50px);
+        }
+
+        .carousel-selector::after {
+            right: calc(50% - 50px);
+        }
+
+        .word-display {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 40px 40px 60px;
+        }
+
+        .role-info-top {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 2px solid;
+            width: 100%;
+            max-width: 350px;
+        }
+
+        .role-info-top.jester { border-color: #f59e0b; }
+        .role-info-top.double-agent { border-color: #dc2626; }
+        .role-info-top.protector { border-color: #10b981; }
+        .role-info-top.framer { border-color: #8b5cf6; }
+        .role-info-top.informant { border-color: #3b82f6; }
+
+        .role-description-compact {
+            font-size: 13px;
+            color: #cbd5e0;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        .role-target-compact {
+            margin-top: 8px;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .word-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .word {
+            font-size: 56px;
+            font-weight: bold;
+            color: #e2e8f0;
+            text-align: center;
+            margin: 0;
+        }
+
+        .role-info {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 2px solid;
+        }
+
+        .role-info.jester { border-color: #f59e0b; }
+        .role-info.double-agent { border-color: #dc2626; }
+        .role-info.protector { border-color: #10b981; }
+        .role-info.framer { border-color: #8b5cf6; }
+        .role-info.informant { border-color: #3b82f6; }
+
+        .role-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .role-description {
+            font-size: 14px;
+            color: #cbd5e0;
+            line-height: 1.5;
+        }
+
+        .role-target {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 10px 25px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0;
+        }
+
+        .role-citizen {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .role-imposter {
+            background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
+            color: white;
+        }
+
+        .hints {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .hint-tag {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 20px;
+            font-size: 18px;
+            color: white;
+            font-weight: 600;
+        }
+
+        .button-area {
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .next-button {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .next-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+        }
+
+        .next-button:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .next-button:not(:disabled):active {
+            transform: translateY(0);
+        }
+
+        .end-game-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            z-index: 100;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            border-radius: 30px;
+        }
+
+        .end-game-screen.hidden {
+            opacity: 0;
+            transform: scale(0.9);
+            pointer-events: none;
+        }
+
+        .end-title {
+            font-size: 36px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+        }
+
+        .end-message {
+            font-size: 18px;
+            color: #cbd5e0;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .player-picker {
+            font-size: 72px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 30px;
+            animation: pulse 1s ease-in-out infinite;
+            text-align: center;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .imposter-list {
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 30px;
+        }
+
+        .imposter-item {
+            background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .start-button {
+            width: 100%;
+            max-width: 300px;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .start-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .start-button:active {
+            transform: translateY(0);
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            animation: rise linear infinite;
+        }
+
+        @keyframes rise {
+            to {
+                transform: translateY(-100vh);
+                opacity: 0;
+            }
+        }
+
+        .player-color-1 { background: rgba(239, 68, 68, 0.3) !important; }
+        .player-color-2 { background: rgba(249, 115, 22, 0.3) !important; }
+        .player-color-3 { background: rgba(234, 179, 8, 0.3) !important; }
+        .player-color-4 { background: rgba(34, 197, 94, 0.3) !important; }
+        .player-color-5 { background: rgba(20, 184, 166, 0.3) !important; }
+        .player-color-6 { background: rgba(59, 130, 246, 0.3) !important; }
+        .player-color-7 { background: rgba(147, 51, 234, 0.3) !important; }
+        .player-color-8 { background: rgba(236, 72, 153, 0.3) !important; }
+        .player-color-9 { background: rgba(244, 114, 182, 0.3) !important; }
+        .player-color-10 { background: rgba(168, 85, 247, 0.3) !important; }
+        .player-color-11 { background: rgba(251, 146, 60, 0.3) !important; }
+        .player-color-12 { background: rgba(14, 165, 233, 0.3) !important; }
+        .player-color-13 { background: rgba(132, 204, 22, 0.3) !important; }
+        .player-color-14 { background: rgba(245, 158, 11, 0.3) !important; }
+        .player-color-15 { background: rgba(239, 68, 68, 0.3) !important; }
+        .player-color-16 { background: rgba(249, 115, 22, 0.3) !important; }
+        .player-color-17 { background: rgba(234, 179, 8, 0.3) !important; }
+        .player-color-18 { background: rgba(34, 197, 94, 0.3) !important; }
+        .player-color-19 { background: rgba(20, 184, 166, 0.3) !important; }
+        .player-color-20 { background: rgba(59, 130, 246, 0.3) !important; }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+    
+    <div class="container">
+        <div class="card">
+            <div class="setup-screen" id="setupScreen">
+                <div class="setup-title">🕵️ Imposter Game</div>
+                
+                <div class="top-controls">
+                    <div class="roles-toggle-compact">
+                        <div class="roles-left">
+                            <span class="toggle-label-small">Roles</span>
+                            <div class="help-icon" id="rolesHelp">?</div>
+                        </div>
+                        <div class="toggle-switch-small" id="rolesToggle">
+                            <div class="toggle-slider-small"></div>
+                        </div>
+                    </div>
+                    <button class="names-button-compact" id="namesButton">Names</button>
+                </div>
+                
+                <div class="setup-group">
+                    <label class="setup-label">Number of Players</label>
+                    <div class="slider-container">
+                        <div class="carousel-selector" id="playerCarousel">
+                            <div class="carousel-track" id="playerTrack"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setup-group">
+                    <label class="setup-label">Number of Imposters</label>
+                    <div class="slider-container">
+                        <div class="carousel-selector" id="imposterCarousel">
+                            <div class="carousel-track" id="imposterTrack"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="start-button" id="startButton">Start Game</button>
+            </div>
+
+            <div class="names-screen hidden" id="namesScreen">
+                <div class="names-screen-title">👥 Enter Player Names</div>
+                <div class="names-grid" id="namesGrid"></div>
+                <div class="names-actions">
+                    <button class="back-button" id="backButton">Back</button>
+                </div>
+            </div>
+
+            <div class="roles-help-screen hidden" id="rolesHelpScreen">
+                <div class="roles-help-title">🎭 Special Roles Guide</div>
+                
+                <div class="role-help-card jester">
+                    <div class="role-help-name">
+                        <span>🃏</span>
+                        <span style="color: #f59e0b;">The Jester</span>
+                    </div>
+                    <div class="role-help-desc">
+                        You know the real word AND the imposters' hint word. Your goal is to get voted out as an imposter.
+                    </div>
+                    <div class="role-help-team">Solo role - Win alone if YOU are voted out</div>
+                </div>
+
+                <div class="role-help-card double-agent">
+                    <div class="role-help-name">
+                        <span>🕶️</span>
+                        <span style="color: #dc2626;">The Double Agent</span>
+                    </div>
+                    <div class="role-help-desc">
+                        You know the real word but you're secretly helping the imposters. Win if at least one imposter survives voting.
+                    </div>
+                    <div class="role-help-team">Imposter team - Help imposters win</div>
+                </div>
+
+                <div class="role-help-card protector">
+                    <div class="role-help-name">
+                        <span>🛡️</span>
+                        <span style="color: #10b981;">The Protector</span>
+                    </div>
+                    <div class="role-help-desc">
+                        You're assigned one player to protect. You win ONLY if that player is NOT voted out.
+                    </div>
+                    <div class="role-help-team">Citizen team - Keep your target alive</div>
+                </div>
+
+                <div class="role-help-card framer">
+                    <div class="role-help-name">
+                        <span>🎯</span>
+                        <span style="color: #8b5cf6;">The Framer</span>
+                    </div>
+                    <div class="role-help-desc">
+                        You're assigned one player to frame. You win if that specific player IS voted out.
+                    </div>
+                    <div class="role-help-team">Solo role - Win alone if target is eliminated</div>
+                </div>
+
+                <div class="role-help-card informant">
+                    <div class="role-help-name">
+                        <span>📡</span>
+                        <span style="color: #3b82f6;">The Informant</span>
+                    </div>
+                    <div class="role-help-desc">
+                        You know the real word AND the imposters' hint word. Use this info to help citizens win.
+                    </div>
+                    <div class="role-help-team">Citizen team - Share info carefully</div>
+                </div>
+
+                <div style="margin-top: 20px; padding: 15px; background: rgba(102, 126, 234, 0.1); border-radius: 10px; font-size: 12px; color: #cbd5e0; text-align: center;">
+                    About 1/3 of players get roles when enabled
+                </div>
+
+                <div class="names-actions" style="margin-top: 20px;">
+                    <button class="back-button" id="rolesHelpBack">Back</button>
+                </div>
+            </div>
+
+            <div class="end-game-screen hidden" id="endGameScreen">
+                <div class="end-title">🎮 All Players Ready!</div>
+                <div class="end-message">Random player to start the discussion:</div>
+                <div class="player-picker" id="playerPicker">Player 1</div>
+                <button class="start-button" id="revealButton">Reveal Imposters</button>
+            </div>
+
+            <div class="end-game-screen hidden" id="revealScreen">
+                <div class="end-title">🎭 The Imposters Were...</div>
+                <div class="imposter-list" id="imposterList"></div>
+                <button class="start-button" id="restartButton">Play Again</button>
+            </div>
+            
+            <div class="content-area">
+                <div class="cover" id="cover">
+                    <div class="player-header-on-cover">
+                        <div class="player-number"><span id="playerNumPrefix">Player </span><span id="playerNum" class="player-number-value">1</span></div>
+                        <div class="player-subtitle">Swipe up to reveal</div>
+                    </div>
+                    
+                    <div class="cover-icon">🕵️</div>
+                    <div class="cover-text">Swipe Up</div>
+                </div>
+                
+                <div class="word-display" id="wordDisplay">
+                    <div id="hintContainer"></div>
+                </div>
+            </div>
+            
+            <div class="button-area">
+                <button class="next-button" id="nextButton">Next Player →</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const gameData = [
+            { word: "Ocean", hints: ["Salty", "Deep", "Current", "Tide", "Marine"] },
+            { word: "Piano", hints: ["Ivory", "Concert", "Grand", "Strings", "Octave"] },
+            { word: "Dragon", hints: ["Legend", "Hoard", "Serpent", "Wyrm", "Medieval"] },
+            { word: "Basketball", hints: ["Rebound", "Foul", "Timeout", "Dunk", "Net"] },
+            { word: "Telescope", hints: ["Observatory", "Magnify", "Distant", "Galaxy", "Aperture"] },
+            { word: "Volcano", hints: ["Dormant", "Vent", "Pumice", "Caldera", "Geothermal"] },
+            { word: "Library", hints: ["Catalog", "Overdue", "Reference", "Stacks", "Dewey"] },
+            { word: "Rainbow", hints: ["Spectrum", "Refraction", "Arch", "Covenant", "Pot"] },
+            { word: "Penguin", hints: ["Colony", "Sliding", "Monochrome", "Emperor", "Krill"] },
+            { word: "Lighthouse", hints: ["Sentinel", "Maritime", "Keeper", "Navigation", "Beam"] },
+            { word: "Cactus", hints: ["Arid", "Prickly", "Succulent", "Sonoran", "Needles"] },
+            { word: "Tornado", hints: ["Vortex", "Alley", "Fujita", "Cyclone", "Debris"] },
+            { word: "Chessboard", hints: ["Diagonal", "Endgame", "Gambit", "Rank", "File"] },
+            { word: "Vampire", hints: ["Nocturnal", "Coffin", "Garlic", "Stake", "Undead"] },
+            { word: "Circus", hints: ["Juggle", "Trapeze", "Ringmaster", "Canvas", "Sawdust"] },
+            { word: "Skateboard", hints: ["Ollie", "Kickflip", "Halfpipe", "Bearings", "Concrete"] },
+            { word: "Pyramid", hints: ["Giza", "Apex", "Burial", "Sphinx", "Dynasty"] },
+            { word: "Dolphin", hints: ["Echolocation", "Pod", "Bottlenose", "Sonar", "Cetacean"] },
+            { word: "Compass", hints: ["Cardinal", "Bearing", "Orient", "Lodestone", "True"] },
+            { word: "Avalanche", hints: ["Thundering", "Slab", "Backcountry", "Beacon", "Burial"] },
+            { word: "Submarine", hints: ["Submerge", "Pressure", "Sonar", "Hull", "Ballast"] },
+            { word: "Hammock", hints: ["Siesta", "Woven", "Tropics", "Cocoon", "Netting"] },
+            { word: "Chimney", hints: ["Flue", "Soot", "Draft", "Hearth", "Stack"] },
+            { word: "Kangaroo", hints: ["Outback", "Joey", "Hop", "Wallaby", "Marsupial"] },
+            { word: "Windmill", hints: ["Turbine", "Netherlands", "Gust", "Grain", "Vane"] },
+            { word: "Glacier", hints: ["Calving", "Moraine", "Crevasse", "Fjord", "Terminal"] },
+            { word: "Accordion", hints: ["Bellows", "Polka", "Squeeze", "Valves", "Reed"] },
+            { word: "Scarecrow", hints: ["Guardian", "Effigy", "Harvest", "Stakes", "Clothes"] },
+            { word: "Quicksand", hints: ["Viscous", "Saturated", "Bog", "Suction", "Sediment"] },
+            { word: "Parachute", hints: ["Ripcord", "Canopy", "Descent", "Harness", "Terminal"] },
+            { word: "Coral", hints: ["Polyp", "Bleach", "Atoll", "Barrier", "Skeleton"] },
+            { word: "Microscope", hints: ["Specimen", "Magnification", "Slide", "Objective", "Petri"] },
+            { word: "Treasure", hints: ["Doubloon", "Loot", "Hoard", "Plunder", "Galleon"] },
+            { word: "Eclipse", hints: ["Totality", "Corona", "Umbra", "Syzygy", "Transit"] },
+            { word: "Fossil", hints: ["Sediment", "Imprint", "Amber", "Trilobite", "Petrified"] },
+            { word: "Origami", hints: ["Crease", "Crane", "Modular", "Kirigami", "Fold"] },
+            { word: "Igloo", hints: ["Inuit", "Dome", "Arctic", "Packed", "Dwelling"] },
+            { word: "Trampoline", hints: ["Springs", "Rebound", "Aerial", "Canvas", "Elasticity"] },
+            { word: "Cobweb", hints: ["Arachnid", "Orb", "Gossamer", "Abandon", "Spiral"] },
+            { word: "Chandelier", hints: ["Crystal", "Pendant", "Ornate", "Fixture", "Ballroom"] },
+            { word: "Unicorn", hints: ["Tapestry", "Maiden", "Spiral", "Mythical", "Purity"] },
+            { word: "Geyser", hints: ["Thermal", "Erupt", "Faithful", "Plume", "Mineral"] },
+            { word: "Anchor", hints: ["Weigh", "Mooring", "Nautical", "Fluke", "Rode"] },
+            { word: "Sphinx", hints: ["Riddle", "Guardian", "Pharaoh", "Paws", "Enigma"] },
+            { word: "Caterpillar", hints: ["Larva", "Molt", "Metamorphosis", "Prolegs", "Chrysalis"] },
+            { word: "Waterfall", hints: ["Cascade", "Plunge", "Basin", "Gorge", "Precipice"] },
+            { word: "Thermometer", hints: ["Celsius", "Calibrate", "Bulb", "Clinical", "Gauge"] },
+            { word: "Mushroom", hints: ["Spore", "Mycelium", "Cap", "Edible", "Toadstool"] },
+            { word: "Labyrinth", hints: ["Minotaur", "Theseus", "Winding", "Hedgerow", "Puzzle"] },
+            { word: "Hourglass", hints: ["Granules", "Duration", "Invert", "Narrow", "Timer"] },
+            { word: "Boomerang", hints: ["Aboriginal", "Aerodynamic", "Trajectory", "Retrieve", "Curved"] },
+            { word: "Campfire", hints: ["Kindling", "Embers", "Stories", "S'mores", "Ring"] },
+            { word: "Beehive", hints: ["Comb", "Pollen", "Queen", "Hexagonal", "Colony"] },
+            { word: "Carousel", hints: ["Merry", "Brass", "Calliope", "Platform", "Revolve"] },
+            { word: "Fountain", hints: ["Jet", "Basin", "Wish", "Ornamental", "Spout"] },
+            { word: "Meteor", hints: ["Comet", "Shooting", "Atmosphere", "Crater", "Celestial"] },
+            { word: "Peacock", hints: ["Plumage", "Iridescent", "Courting", "Ocelli", "Strut"] },
+            { word: "Skeleton", hints: ["Marrow", "Vertebrae", "Cranium", "Ossify", "Cartilage"] },
+            { word: "Thunderstorm", hints: ["Static", "Cumulonimbus", "Flash", "Boom", "Precipitation"] },
+            { word: "Barbershop", hints: ["Shears", "Lather", "Trim", "Stripe", "Quartet"] },
+            { word: "Magnet", hints: ["Ferrous", "Dipole", "Attract", "Field", "Lodestone"] },
+            { word: "Blizzard", hints: ["Gale", "Whiteout", "Snowdrift", "Conditions", "Advisory"] },
+            { word: "Castle", hints: ["Rampart", "Keep", "Parapet", "Siege", "Moat"] },
+            { word: "Satellite", hints: ["Geosynchronous", "Telemetry", "Launch", "Relay", "Orbit"] },
+            { word: "Jungle", hints: ["Undergrowth", "Biodiversity", "Equatorial", "Canopy", "Humidity"] },
+            { word: "Rollercoaster", hints: ["Inversion", "G-force", "Incline", "Thrill", "Rails"] },
+            { word: "Anthill", hints: ["Chamber", "Queen", "Foraging", "Excavate", "Mandibles"] },
+            { word: "Snowman", hints: ["Frosty", "Spheres", "Twig", "Melt", "Winter"] },
+            { word: "Seesaw", hints: ["Fulcrum", "Teeter", "Partner", "Plank", "Pivot"] },
+            { word: "Bagpipes", hints: ["Highland", "Tartan", "Drone", "Chanter", "Reed"] },
+            { word: "Cobblestone", hints: ["Paved", "Uneven", "Historic", "Carriage", "Stone"] },
+            { word: "Watermelon", hints: ["Rind", "Seedless", "Picnic", "Juicy", "Summer"] },
+            { word: "Crocodile", hints: ["Basking", "Apex", "Predator", "Nile", "Armored"] },
+            { word: "Sandcastle", hints: ["Moat", "Turret", "Bucket", "Tide", "Beach"] },
+            { word: "Butterfly", hints: ["Proboscis", "Migration", "Metamorphosis", "Lepidoptera", "Chrysalis"] },
+            { word: "Ambulance", hints: ["Trauma", "Medic", "Dispatch", "Gurney", "Sirens"] },
+            { word: "Dandelion", hints: ["Wishes", "Puff", "Invasive", "Taproot", "Parachute"] },
+            { word: "Toothbrush", hints: ["Bristle", "Cavity", "Hygiene", "Fluoride", "Plaque"] },
+            { word: "Sunflower", hints: ["Heliotropism", "Seeds", "Kansas", "Vincent", "Tall"] },
+            { word: "Fishbowl", hints: ["Aquarium", "Goldfish", "Circular", "Gravel", "Confined"] },
+            { word: "Xylophone", hints: ["Mallet", "Pitch", "Bars", "Percussion", "Diatonic"] },
+            { word: "Stopwatch", hints: ["Chronograph", "Precision", "Lap", "Split", "Athletes"] },
+            { word: "Camera", hints: ["Exposure", "Aperture", "Shutter", "ISO", "Viewfinder"] },
+            { word: "Balloon", hints: ["Inflate", "Latex", "Helium", "Party", "Pop"] },
+            { word: "Pumpkin", hints: ["Gourd", "Patch", "Jack", "Pie", "Harvest"] },
+            { word: "Dentist", hints: ["Extraction", "Molar", "Filling", "Orthodontist", "Hygienist"] },
+            { word: "Saxophone", hints: ["Embouchure", "Alto", "Woodwind", "Jazz", "Reed"] },
+            { word: "Spaceship", hints: ["Vessel", "Propulsion", "Interstellar", "Cockpit", "Launch"] },
+            { word: "Treehouse", hints: ["Platform", "Hideout", "Canopy", "Nails", "Branches"] },
+            { word: "Microscope", hints: ["Compound", "Magnify", "Bacteria", "Specimen", "Lens"] },
+            { word: "Anchor", hints: ["Secure", "Maritime", "Weigh", "Chain", "Port"] },
+            { word: "Campfire", hints: ["Tinder", "Crackle", "Smoke", "Warmth", "Circle"] },
+            { word: "Tornado", hints: ["Twister", "Alley", "Siren", "Shelter", "Funnel"] }
+        ];
+
+        let currentPlayer = 1;
+        let totalPlayers = 6;
+        let imposterCount = 2;
+        let imposters = [];
+        let imposterHint = "";
+        let touchStartY = 0;
+        let touchCurrentY = 0;
+        let isDragging = false;
+        let hasRevealed = false;
+        let contentHeight = 0;
+        let currentGameData = null;
+        let rolesEnabled = false;
+        let playerNames = {};
+        let playerRoles = {};
+        let roleAssignments = {};
+        
+        // Role definitions
+        const roles = {
+            jester: { name: "The Jester", color: "#f59e0b" },
+            doubleAgent: { name: "The Double Agent", color: "#dc2626" },
+            protector: { name: "The Protector", color: "#10b981" },
+            framer: { name: "The Framer", color: "#8b5cf6" },
+            informant: { name: "The Informant", color: "#3b82f6" }
+        };
+
+        function getPlayerDisplay(playerNum) {
+            if (playerNames[playerNum]) {
+                return playerNames[playerNum];
+            }
+            return `Player ${playerNum}`;
+        }
+
+        function hasAnyNames() {
+            return Object.values(playerNames).some(name => name && name.trim());
+        }
+        
+        // Carousel state
+        let playerCarouselIndex = 3; // Start at 6 (index 3 in 3-20 range)
+        let imposterCarouselIndex = 1; // Start at 2 (index 1 in 1-10 range)
+        let playerCarouselStartY = 0;
+        let imposterCarouselStartY = 0;
+        let playerCarouselDragging = false;
+        let imposterCarouselDragging = false;
+        
+        // Initialize carousels
+        function initCarousels() {
+            const playerTrack = document.getElementById('playerTrack');
+            const imposterTrack = document.getElementById('imposterTrack');
+            
+            // Create player carousel items (3-20)
+            for (let i = 3; i <= 20; i++) {
+                const item = document.createElement('div');
+                item.className = 'carousel-item';
+                item.textContent = i;
+                item.dataset.value = i;
+                playerTrack.appendChild(item);
+            }
+            
+            // Create imposter carousel items (1-10)
+            for (let i = 1; i <= 10; i++) {
+                const item = document.createElement('div');
+                item.className = 'carousel-item';
+                item.textContent = i;
+                item.dataset.value = i;
+                imposterTrack.appendChild(item);
+            }
+            
+            updateCarousel('player');
+            updateCarousel('imposter');
+            setupCarouselListeners();
+        }
+        
+        function updateCarousel(type) {
+            const track = type === 'player' ? document.getElementById('playerTrack') : document.getElementById('imposterTrack');
+            const index = type === 'player' ? playerCarouselIndex : imposterCarouselIndex;
+            const items = track.children;
+            const carousel = type === 'player' ? document.getElementById('playerCarousel') : document.getElementById('imposterCarousel');
+            
+            // Calculate offset to center the selected item
+            const carouselWidth = carousel.clientWidth;
+            const offset = (carouselWidth / 2) - (index * 100) - 50; // 50 is half of item width
+            track.style.transform = `translateX(${offset}px)`;
+            
+            // Update active state
+            for (let i = 0; i < items.length; i++) {
+                if (i === index) {
+                    items[i].classList.add('active');
+                } else {
+                    items[i].classList.remove('active');
+                }
+            }
+            
+            // Update values
+            if (type === 'player') {
+                totalPlayers = parseInt(items[index].dataset.value);
+            } else {
+                imposterCount = parseInt(items[index].dataset.value);
+            }
+        }
+        
+        function setupCarouselListeners() {
+            const playerCarousel = document.getElementById('playerCarousel');
+            const imposterCarousel = document.getElementById('imposterCarousel');
+            
+            // Player carousel
+            playerCarousel.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                if (e.deltaY > 0 || e.deltaX > 0) {
+                    playerCarouselIndex = (playerCarouselIndex + 1) % 18;
+                } else {
+                    playerCarouselIndex = (playerCarouselIndex - 1 + 18) % 18;
+                }
+                updateCarousel('player');
+            });
+            
+            let playerStartX = 0;
+            playerCarousel.addEventListener('touchstart', (e) => {
+                playerStartX = e.touches[0].clientX;
+                playerCarouselDragging = true;
+            });
+            
+            playerCarousel.addEventListener('touchmove', (e) => {
+                if (!playerCarouselDragging) return;
+                const deltaX = e.touches[0].clientX - playerStartX;
+                if (Math.abs(deltaX) > 50) {
+                    if (deltaX < 0) {
+                        playerCarouselIndex = (playerCarouselIndex + 1) % 18;
+                    } else {
+                        playerCarouselIndex = (playerCarouselIndex - 1 + 18) % 18;
+                    }
+                    updateCarousel('player');
+                    playerStartX = e.touches[0].clientX;
+                }
+            });
+            
+            playerCarousel.addEventListener('touchend', () => {
+                playerCarouselDragging = false;
+            });
+            
+            // Mouse drag for player carousel
+            let playerMouseDown = false;
+            let playerMouseStartX = 0;
+            
+            playerCarousel.addEventListener('mousedown', (e) => {
+                playerMouseDown = true;
+                playerMouseStartX = e.clientX;
+            });
+            
+            playerCarousel.addEventListener('mousemove', (e) => {
+                if (!playerMouseDown) return;
+                const deltaX = e.clientX - playerMouseStartX;
+                if (Math.abs(deltaX) > 50) {
+                    if (deltaX < 0) {
+                        playerCarouselIndex = (playerCarouselIndex + 1) % 18;
+                    } else {
+                        playerCarouselIndex = (playerCarouselIndex - 1 + 18) % 18;
+                    }
+                    updateCarousel('player');
+                    playerMouseStartX = e.clientX;
+                }
+            });
+            
+            playerCarousel.addEventListener('mouseup', () => {
+                playerMouseDown = false;
+            });
+            
+            playerCarousel.addEventListener('mouseleave', () => {
+                playerMouseDown = false;
+            });
+            
+            // Imposter carousel
+            imposterCarousel.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                if (e.deltaY > 0 || e.deltaX > 0) {
+                    imposterCarouselIndex = (imposterCarouselIndex + 1) % 10;
+                } else {
+                    imposterCarouselIndex = (imposterCarouselIndex - 1 + 10) % 10;
+                }
+                updateCarousel('imposter');
+            });
+            
+            let imposterStartX = 0;
+            imposterCarousel.addEventListener('touchstart', (e) => {
+                imposterStartX = e.touches[0].clientX;
+                imposterCarouselDragging = true;
+            });
+            
+            imposterCarousel.addEventListener('touchmove', (e) => {
+                if (!imposterCarouselDragging) return;
+                const deltaX = e.touches[0].clientX - imposterStartX;
+                if (Math.abs(deltaX) > 50) {
+                    if (deltaX < 0) {
+                        imposterCarouselIndex = (imposterCarouselIndex + 1) % 10;
+                    } else {
+                        imposterCarouselIndex = (imposterCarouselIndex - 1 + 10) % 10;
+                    }
+                    updateCarousel('imposter');
+                    imposterStartX = e.touches[0].clientX;
+                }
+            });
+            
+            imposterCarousel.addEventListener('touchend', () => {
+                imposterCarouselDragging = false;
+            });
+            
+            // Mouse drag for imposter carousel
+            let imposterMouseDown = false;
+            let imposterMouseStartX = 0;
+            
+            imposterCarousel.addEventListener('mousedown', (e) => {
+                imposterMouseDown = true;
+                imposterMouseStartX = e.clientX;
+            });
+            
+            imposterCarousel.addEventListener('mousemove', (e) => {
+                if (!imposterMouseDown) return;
+                const deltaX = e.clientX - imposterMouseStartX;
+                if (Math.abs(deltaX) > 50) {
+                    if (deltaX < 0) {
+                        imposterCarouselIndex = (imposterCarouselIndex + 1) % 10;
+                    } else {
+                        imposterCarouselIndex = (imposterCarouselIndex - 1 + 10) % 10;
+                    }
+                    updateCarousel('imposter');
+                    imposterMouseStartX = e.clientX;
+                }
+            });
+            
+            imposterCarousel.addEventListener('mouseup', () => {
+                imposterMouseDown = false;
+            });
+            
+            imposterCarousel.addEventListener('mouseleave', () => {
+                imposterMouseDown = false;
+            });
+        }
+        
+        // Toggle roles
+        document.getElementById('rolesToggle').addEventListener('click', function() {
+            rolesEnabled = !rolesEnabled;
+            this.classList.toggle('active');
+        });
+
+        // Roles help button
+        document.getElementById('rolesHelp').addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.getElementById('rolesHelpScreen').classList.remove('hidden');
+        });
+
+        // Roles help back button
+        document.getElementById('rolesHelpBack').addEventListener('click', function() {
+            document.getElementById('rolesHelpScreen').classList.add('hidden');
+        });
+
+        // Names button - go to names screen
+        document.getElementById('namesButton').addEventListener('click', function() {
+            generateNameInputs();
+            document.getElementById('namesScreen').classList.remove('hidden');
+        });
+
+        // Back button - return to setup
+        document.getElementById('backButton').addEventListener('click', function() {
+            document.getElementById('namesScreen').classList.add('hidden');
+        });
+
+        function generateNameInputs() {
+            const namesGrid = document.getElementById('namesGrid');
+            namesGrid.innerHTML = '';
+            
+            for (let i = 1; i <= totalPlayers; i++) {
+                const inputGroup = document.createElement('div');
+                inputGroup.className = 'name-input-group';
+                
+                const label = document.createElement('label');
+                label.className = 'name-input-label';
+                label.textContent = `Player ${i}`;
+                
+                const wrapper = document.createElement('div');
+                wrapper.className = 'name-input-wrapper';
+                
+                const input = document.createElement('input');
+                input.className = 'name-input';
+                input.type = 'text';
+                input.placeholder = `Enter name for Player ${i}`;
+                input.value = playerNames[i] || '';
+                input.dataset.player = i;
+                
+                const clearBtn = document.createElement('button');
+                clearBtn.className = 'clear-name-btn';
+                clearBtn.innerHTML = '×';
+                clearBtn.type = 'button';
+                
+                clearBtn.addEventListener('click', () => {
+                    input.value = '';
+                    playerNames[i] = '';
+                });
+                
+                input.addEventListener('input', (e) => {
+                    const playerNum = parseInt(e.target.dataset.player);
+                    playerNames[playerNum] = e.target.value.trim();
+                });
+                
+                wrapper.appendChild(input);
+                wrapper.appendChild(clearBtn);
+                inputGroup.appendChild(label);
+                inputGroup.appendChild(wrapper);
+                namesGrid.appendChild(inputGroup);
+            }
+        }
+        
+        function initGame() {
+            currentGameData = gameData[Math.floor(Math.random() * gameData.length)];
+            
+            imposters = [];
+            while (imposters.length < imposterCount) {
+                const randomPlayer = Math.floor(Math.random() * totalPlayers) + 1;
+                if (!imposters.includes(randomPlayer)) {
+                    imposters.push(randomPlayer);
+                }
+            }
+            
+            imposterHint = currentGameData.hints[Math.floor(Math.random() * currentGameData.hints.length)];
+            
+            // Assign roles if enabled
+            playerRoles = {};
+            roleAssignments = {};
+            if (rolesEnabled) {
+                assignRoles();
+            }
+            
+            setupPlayer();
+            createParticles();
+            
+            const contentArea = document.querySelector('.content-area');
+            contentHeight = contentArea.clientHeight;
+        }
+
+        function assignRoles() {
+            const availablePlayers = [];
+            for (let i = 1; i <= totalPlayers; i++) {
+                availablePlayers.push(i);
+            }
+            
+            // Shuffle available players
+            for (let i = availablePlayers.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [availablePlayers[i], availablePlayers[j]] = [availablePlayers[j], availablePlayers[i]];
+            }
+            
+            // Determine number of roles (about 1/3 of players)
+            const roleCount = Math.max(1, Math.floor(totalPlayers / 3));
+            const roleTypes = ['jester', 'doubleAgent', 'protector', 'framer', 'informant'];
+            
+            let rolesAssigned = 0;
+            for (let i = 0; i < availablePlayers.length && rolesAssigned < roleCount; i++) {
+                const player = availablePlayers[i];
+                const roleType = roleTypes[rolesAssigned % roleTypes.length];
+                
+                // Skip if this would conflict with imposter role
+                if (roleType === 'doubleAgent' && imposters.includes(player)) {
+                    continue;
+                }
+                if (roleType === 'jester' && imposters.includes(player)) {
+                    continue;
+                }
+                
+                playerRoles[player] = roleType;
+                
+                // Assign targets for protector and framer
+                if (roleType === 'protector' || roleType === 'framer') {
+                    const possibleTargets = [];
+                    for (let j = 1; j <= totalPlayers; j++) {
+                        if (j !== player) possibleTargets.push(j);
+                    }
+                    roleAssignments[player] = possibleTargets[Math.floor(Math.random() * possibleTargets.length)];
+                }
+                
+                rolesAssigned++;
+            }
+        }
+
+        function setupPlayer() {
+            const isImposter = imposters.includes(currentPlayer);
+            const playerRole = playerRoles[currentPlayer];
+            const roleBadge = document.getElementById('roleBadge');
+            const wordEl = document.getElementById('word');
+            const hintContainer = document.getElementById('hintContainer');
+            const playerNumEl = document.getElementById('playerNum');
+            const playerNumPrefix = document.getElementById('playerNumPrefix');
+            
+            if (playerNames[currentPlayer]) {
+                playerNumEl.textContent = playerNames[currentPlayer];
+                playerNumPrefix.style.display = 'none';
+            } else {
+                playerNumEl.textContent = currentPlayer;
+                playerNumPrefix.style.display = 'inline';
+            }
+            playerNumEl.className = `player-number-value player-color-${currentPlayer}`;
+            
+            let roleInfo = '';
+            let wordSection = '';
+            
+            // Handle special roles
+            if (playerRole === 'jester') {
+                roleInfo = `
+                    <div class="role-info-top jester">
+                        <div class="role-description-compact">Win if YOU are voted out. You know everything.</div>
+                    </div>
+                `;
+                
+                wordSection = `
+                    <div class="word-section">
+                        <div class="role-badge" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">🃏 The Jester</div>
+                        <div class="word">${currentGameData.word}</div>
+                        <div style="font-size: 14px; color: #a0aec0; margin-top: 10px;">Imposters' Hint:</div>
+                        <div class="hints">
+                            <div class="hint-tag">${imposterHint}</div>
+                        </div>
+                    </div>
+                `;
+            } else if (playerRole === 'doubleAgent') {
+                roleInfo = `
+                    <div class="role-info-top double-agent">
+                        <div class="role-description-compact">Help imposters win. At least one must survive.</div>
+                    </div>
+                `;
+                
+                wordSection = `
+                    <div class="word-section">
+                        <div class="role-badge" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);">🕶️ Double Agent</div>
+                        <div class="word">${currentGameData.word}</div>
+                    </div>
+                `;
+            } else if (playerRole === 'protector') {
+                roleInfo = `
+                    <div class="role-info-top protector">
+                        <div class="role-description-compact">Win ONLY if your target survives voting.</div>
+                        <div class="role-target-compact">Protect: ${getPlayerDisplay(roleAssignments[currentPlayer])}</div>
+                    </div>
+                `;
+                
+                wordSection = `
+                    <div class="word-section">
+                        <div class="role-badge" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">🛡️ The Protector</div>
+                        <div class="word">${currentGameData.word}</div>
+                    </div>
+                `;
+            } else if (playerRole === 'framer') {
+                roleInfo = `
+                    <div class="role-info-top framer">
+                        <div class="role-description-compact">Win if your target IS voted out.</div>
+                        <div class="role-target-compact">Frame: ${getPlayerDisplay(roleAssignments[currentPlayer])}</div>
+                    </div>
+                `;
+                
+                wordSection = `
+                    <div class="word-section">
+                        <div class="role-badge" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">🎯 The Framer</div>
+                        <div class="word">${currentGameData.word}</div>
+                    </div>
+                `;
+            } else if (playerRole === 'informant') {
+                roleInfo = `
+                    <div class="role-info-top informant">
+                        <div class="role-description-compact">You know everything. Help citizens win.</div>
+                    </div>
+                `;
+                
+                wordSection = `
+                    <div class="word-section">
+                        <div class="role-badge" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">📡 The Informant</div>
+                        <div class="word">${currentGameData.word}</div>
+                        <div style="font-size: 14px; color: #a0aec0; margin-top: 10px;">Imposters' Hint:</div>
+                        <div class="hints">
+                            <div class="hint-tag">${imposterHint}</div>
+                        </div>
+                    </div>
+                `;
+            } else if (isImposter) {
+                wordSection = `
+                    <div class="word-section">
+                        <div class="role-badge role-imposter">🎭 Imposter</div>
+                        <div style="font-size: 14px; color: #a0aec0; margin-top: 10px; margin-bottom: 10px;">Your Hint:</div>
+                        <div class="hints">
+                            <div class="hint-tag">${imposterHint}</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                wordSection = `
+                    <div class="word-section">
+                        <div class="role-badge role-citizen">✓ Citizen</div>
+                        <div class="word">${currentGameData.word}</div>
+                    </div>
+                `;
+            }
+            
+            hintContainer.innerHTML = roleInfo + wordSection;
+            
+            hasRevealed = false;
+            document.getElementById('nextButton').disabled = true;
+        }
+
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            particlesContainer.innerHTML = '';
+            
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                const size = Math.random() * 5 + 2;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                particle.style.animationDelay = Math.random() * 5 + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        const cover = document.getElementById('cover');
+        
+        function handleDragStart(clientY) {
+            touchStartY = clientY;
+            isDragging = true;
+            cover.classList.remove('snapping');
+        }
+        
+        function handleDragMove(clientY) {
+            if (!isDragging) return;
+            touchCurrentY = clientY;
+            const diff = touchStartY - touchCurrentY;
+            
+            const translateY = Math.min(0, -diff);
+            cover.style.transform = `translateY(${translateY}px)`;
+            
+            const quarterHeight = contentHeight / 4;
+            if (diff >= quarterHeight && !hasRevealed) {
+                hasRevealed = true;
+                document.getElementById('nextButton').disabled = false;
+            }
+        }
+        
+        function handleDragEnd() {
+            if (!isDragging) return;
+            isDragging = false;
+            
+            cover.classList.add('snapping');
+            cover.style.transform = 'translateY(0)';
+            setTimeout(() => {
+                cover.classList.remove('snapping');
+            }, 400);
+        }
+        
+        cover.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleDragStart(e.touches[0].clientY);
+        });
+
+        cover.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            handleDragMove(e.touches[0].clientY);
+        });
+
+        cover.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            handleDragEnd();
+        });
+
+        cover.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            handleDragStart(e.clientY);
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                e.preventDefault();
+                handleDragMove(e.clientY);
+            }
+        });
+
+        document.addEventListener('mouseup', (e) => {
+            if (isDragging) {
+                e.preventDefault();
+                handleDragEnd();
+            }
+        });
+
+        document.getElementById('startButton').addEventListener('click', function() {
+            if (imposterCount >= totalPlayers) {
+                alert('Number of imposters must be less than total players!');
+                return;
+            }
+            
+            if (totalPlayers < 3) {
+                alert('Need at least 3 players!');
+                return;
+            }
+            
+            document.getElementById('setupScreen').classList.add('hidden');
+            currentPlayer = 1;
+            initGame();
+        });
+
+        document.getElementById('nextButton').addEventListener('click', function() {
+            if (!hasRevealed) return;
+            
+            currentPlayer++;
+            
+            if (currentPlayer > totalPlayers) {
+                const randomPlayer = Math.floor(Math.random() * totalPlayers) + 1;
+                document.getElementById('playerPicker').textContent = `Player ${randomPlayer}`;
+                document.getElementById('endGameScreen').classList.remove('hidden');
+                return;
+            }
+            
+            cover.style.transform = 'translateY(0)';
+            
+            setTimeout(() => {
+                setupPlayer();
+            }, 50);
+        });
+
+        document.getElementById('revealButton').addEventListener('click', function() {
+            document.getElementById('endGameScreen').classList.add('hidden');
+            
+            const imposterListEl = document.getElementById('imposterList');
+            imposterListEl.innerHTML = imposters
+                .sort((a, b) => a - b)
+                .map(player => `<div class="imposter-item">Player ${player}</div>`)
+                .join('');
+            
+            document.getElementById('revealScreen').classList.remove('hidden');
+        });
+
+        document.getElementById('restartButton').addEventListener('click', function() {
+            document.getElementById('revealScreen').classList.add('hidden');
+            document.getElementById('setupScreen').classList.remove('hidden');
+            currentPlayer = 1;
+        });
+
+        initCarousels();
+        createParticles();
+    </script>
+</body>
+</html>

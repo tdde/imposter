@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Imposter Game</title>
+    <title>Imposter</title>
     <style>
         * {
             margin: 0;
@@ -22,6 +22,10 @@
             position: fixed;
             width: 100%;
             touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         .container {
@@ -35,7 +39,7 @@
 
         .card {
             flex: 1;
-            margin: 20px;
+            margin: 20px 20px 100px 20px;
             background: rgba(30, 30, 46, 0.95);
             border-radius: 30px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
@@ -182,6 +186,59 @@
             display: flex;
             align-items: center;
             gap: 6px;
+        }
+
+        .role-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 12px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
+        .role-toggle {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .role-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #444;
+            transition: .4s;
+            border-radius: 20px;
+        }
+
+        .role-toggle input:checked + .slider {
+            background-color: #4cc9f0;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        .role-toggle input:checked + .slider:before {
+            transform: translateX(20px);
         }
 
         .help-icon {
@@ -421,6 +478,10 @@
             color: #e2e8f0;
             border-radius: 8px;
             transition: all 0.3s ease;
+            user-select: text;
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
         }
 
         .name-input:focus {
@@ -526,6 +587,15 @@
         .role-help-card.protector { border-left-color: #10b981; }
         .role-help-card.framer { border-left-color: #8b5cf6; }
         .role-help-card.informant { border-left-color: #3b82f6; }
+        .role-help-card.paranoid { border-left-color: #f97316; }
+        .role-help-card.tourist { border-left-color: #6366f1; }
+        .role-help-card.sniper { border-left-color: #dc2626; }
+        .role-help-card.lovers { border-left-color: #ec4899; }
+        .role-help-card.oracle { border-left-color: #14b8a6; }
+        .role-help-card.mimic { border-left-color: #a855f7; }
+        .role-help-card.lawyer { border-left-color: #3b82f6; }
+        .role-help-card.thief { border-left-color: #f59e0b; }
+        .role-help-card.twin { border-left-color: #10b981; }
 
         .role-help-name {
             font-size: 16px;
@@ -654,7 +724,7 @@
             flex-direction: column;
             justify-content: flex-end;
             align-items: center;
-            padding: 40px 40px 60px;
+            padding: 30px 40px 40px;
         }
 
         .role-info-top {
@@ -672,6 +742,15 @@
         .role-info-top.protector { border-color: #10b981; }
         .role-info-top.framer { border-color: #8b5cf6; }
         .role-info-top.informant { border-color: #3b82f6; }
+        .role-info-top.paranoid { border-color: #f97316; }
+        .role-info-top.tourist { border-color: #6366f1; }
+        .role-info-top.sniper { border-color: #dc2626; }
+        .role-info-top.lovers { border-color: #ec4899; }
+        .role-info-top.oracle { border-color: #14b8a6; }
+        .role-info-top.mimic { border-color: #a855f7; }
+        .role-info-top.lawyer { border-color: #3b82f6; }
+        .role-info-top.thief { border-color: #f59e0b; }
+        .role-info-top.twin { border-color: #10b981; }
 
         .role-description-compact {
             font-size: 13px;
@@ -718,6 +797,15 @@
         .role-info.protector { border-color: #10b981; }
         .role-info.framer { border-color: #8b5cf6; }
         .role-info.informant { border-color: #3b82f6; }
+        .role-info.paranoid { border-color: #f97316; }
+        .role-info.tourist { border-color: #6366f1; }
+        .role-info.sniper { border-color: #dc2626; }
+        .role-info.lovers { border-color: #ec4899; }
+        .role-info.oracle { border-color: #14b8a6; }
+        .role-info.mimic { border-color: #a855f7; }
+        .role-info.lawyer { border-color: #3b82f6; }
+        .role-info.thief { border-color: #f59e0b; }
+        .role-info.twin { border-color: #10b981; }
 
         .role-title {
             font-size: 18px;
@@ -781,7 +869,7 @@
         }
 
         .button-area {
-            padding: 20px;
+            padding: 20px 20px 30px 20px;
             display: flex;
             justify-content: center;
         }
@@ -966,7 +1054,7 @@
     <div class="container">
         <div class="card">
             <div class="setup-screen" id="setupScreen">
-                <div class="setup-title">🕵️ Imposter Game</div>
+                <div class="setup-title">🕵️ Imposter</div>
                 
                 <div class="top-controls">
                     <div class="roles-toggle-compact">
@@ -1015,61 +1103,194 @@
                 
                 <div class="role-help-card jester">
                     <div class="role-help-name">
+                        <label class="role-toggle">
+                            <input type="checkbox" class="role-checkbox" data-role="jester" checked>
+                            <span class="slider"></span>
+                        </label>
                         <span>🃏</span>
                         <span style="color: #f59e0b;">The Jester</span>
                     </div>
-                    <div class="role-help-desc">
-                        You know the real word AND the imposters' hint word. Your goal is to get voted out as an imposter.
-                    </div>
-                    <div class="role-help-team">Solo role - Win alone if YOU are voted out</div>
+                    <div class="role-help-desc">You know the real word AND the imposters' hint word. Goal: get voted out.</div>
+                    <div class="role-help-team">Solo role</div>
                 </div>
 
                 <div class="role-help-card double-agent">
                     <div class="role-help-name">
+                        <label class="role-toggle">
+                            <input type="checkbox" class="role-checkbox" data-role="doubleAgent" checked>
+                            <span class="slider"></span>
+                        </label>
                         <span>🕶️</span>
                         <span style="color: #dc2626;">The Double Agent</span>
                     </div>
-                    <div class="role-help-desc">
-                        You know the real word but you're secretly helping the imposters. Win if at least one imposter survives voting.
-                    </div>
-                    <div class="role-help-team">Imposter team - Help imposters win</div>
+                    <div class="role-help-desc">You know the real word but you're secretly helping the imposters.</div>
+                    <div class="role-help-team">Imposter team</div>
                 </div>
 
                 <div class="role-help-card protector">
                     <div class="role-help-name">
+                        <label class="role-toggle">
+                            <input type="checkbox" class="role-checkbox" data-role="protector" checked>
+                            <span class="slider"></span>
+                        </label>
                         <span>🛡️</span>
                         <span style="color: #10b981;">The Protector</span>
                     </div>
-                    <div class="role-help-desc">
-                        You're assigned one player to protect. You win ONLY if that player is NOT voted out.
-                    </div>
-                    <div class="role-help-team">Citizen team - Keep your target alive</div>
+                    <div class="role-help-desc">You win ONLY if your assigned target is NOT voted out.</div>
+                    <div class="role-help-team">Citizen team</div>
                 </div>
 
                 <div class="role-help-card framer">
                     <div class="role-help-name">
+                        <label class="role-toggle">
+                            <input type="checkbox" class="role-checkbox" data-role="framer" checked>
+                            <span class="slider"></span>
+                        </label>
                         <span>🎯</span>
                         <span style="color: #8b5cf6;">The Framer</span>
                     </div>
-                    <div class="role-help-desc">
-                        You're assigned one player to frame. You win if that specific player IS voted out.
-                    </div>
-                    <div class="role-help-team">Solo role - Win alone if target is eliminated</div>
+                    <div class="role-help-desc">You win if your assigned target IS voted out.</div>
+                    <div class="role-help-team">Solo role</div>
                 </div>
 
                 <div class="role-help-card informant">
                     <div class="role-help-name">
+                        <label class="role-toggle">
+                            <input type="checkbox" class="role-checkbox" data-role="informant" checked>
+                            <span class="slider"></span>
+                        </label>
                         <span>📡</span>
                         <span style="color: #3b82f6;">The Informant</span>
                     </div>
-                    <div class="role-help-desc">
-                        You know the real word AND the imposters' hint word. Use this info to help citizens win.
-                    </div>
-                    <div class="role-help-team">Citizen team - Share info carefully</div>
+                    <div class="role-help-desc">You know the real word AND the imposters' hint word.</div>
+                    <div class="role-help-team">Citizen team</div>
                 </div>
 
-                <div style="margin-top: 20px; padding: 15px; background: rgba(102, 126, 234, 0.1); border-radius: 10px; font-size: 12px; color: #cbd5e0; text-align: center;">
-                    About 1/3 of players get roles when enabled
+                <div class="role-help-card paranoid">
+                    <div class="role-help-name">
+                        <label class="role-toggle">
+                            <input type="checkbox" class="role-checkbox" data-role="paranoid" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>😰</span>
+                        <span style="color: #f97316;">The Paranoid</span>
+                    </div>
+                    <div class="role-help-desc">You see a related word but don't know it's different.</div>
+                    <div class="role-help-team">Citizen team</div>
+                </div>
+
+                <div class="role-help-card tourist">
+                    <div class="role-help-name">
+                        <label class="role-toggle">
+                            <input type="checkbox" class="role-checkbox" data-role="tourist" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>🧳</span>
+                        <span style="color: #6366f1;">The Tourist</span>
+                    </div>
+                    <div class="role-help-desc">You receive NO word at all. Essentially a blind citizen.</div>
+                    <div class="role-help-team">Citizen team</div>
+                </div>
+
+                <div class="role-help-card sniper">
+                    <div class="role-help-name">
+                        <label class="role-toggle">
+                            <input type="checkbox" class="role-checkbox" data-role="sniper" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>🎯</span>
+                        <span style="color: #dc2626;">The Sniper</span>
+                    </div>
+                    <div class="role-help-desc">Imposter. If voted out, guess the real word to steal the win!</div>
+                    <div class="role-help-team">Imposter team</div>
+                </div>
+
+                <div class="role-help-card oracle">
+                    <div class="role-help-name">
+                        <label class="role-toggle">
+                            <input type="checkbox" class="role-checkbox" data-role="oracle" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>🔮</span>
+                        <span style="color: #14b8a6;">The Oracle</span>
+                    </div>
+                    <div class="role-help-desc">You know the word but your clue must be ONE syllable.</div>
+                    <div class="role-help-team">Citizen team</div>
+                </div>
+
+                <div class="role-help-card mimic">
+                    <div class="role-help-name">
+                        <label class="role-toggle">
+                            <input type="checkbox" class="role-checkbox" data-role="mimic" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>🎭</span>
+                        <span style="color: #a855f7;">The Mimic</span>
+                    </div>
+                    <div class="role-help-desc">No word. Rhyme with or copy the player before you.</div>
+                    <div class="role-help-team">Solo/Neutral</div>
+                </div>
+
+                <div class="role-help-card lawyer">
+                    <div class="role-help-name">
+                        <label class="role-toggle">
+                            <input type="checkbox" class="role-checkbox" data-role="lawyer" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>⚖️</span>
+                        <span style="color: #3b82f6;">The Lawyer</span>
+                    </div>
+                    <div class="role-help-desc">Protect one player from being voted out this round.</div>
+                    <div class="role-help-team">Citizen team</div>
+                </div>
+
+                <div class="role-help-card thief">
+                    <div class="role-help-name">
+                        <label class="role-toggle">
+                            <input type="checkbox" class="role-checkbox" data-role="thief" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>🦹</span>
+                        <span style="color: #f59e0b;">The Thief</span>
+                    </div>
+                    <div class="role-help-desc">You see the imposter hint. Win if imposters win.</div>
+                    <div class="role-help-team">Solo/Neutral</div>
+                </div>
+
+                <div class="role-help-card twin">
+                    <div class="role-help-name">
+                        <label class="role-toggle">
+                            <input type="checkbox" class="role-checkbox" data-role="twin" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>👯</span>
+                        <span style="color: #10b981;">The Twin</span>
+                    </div>
+                    <div class="role-help-desc">Find your twin. You get a unique hint different from imposters.</div>
+                    <div class="role-help-team">Citizen team</div>
+                </div>
+
+                <div class="role-help-card lovers">
+                    <div class="role-help-name">
+                        <label class="role-toggle">
+                            <input type="checkbox" class="role-checkbox" data-role="lovers" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>💕</span>
+                        <span style="color: #ec4899;">Romeo & Juliet</span>
+                    </div>
+                    <div class="role-help-desc">Linked pair. Both must survive to win.</div>
+                    <div class="role-help-team">Duo team</div>
+                </div>
+
+                <div style="margin-top: 20px; padding: 15px; background: rgba(102, 126, 234, 0.1); border-radius: 10px; color: #cbd5e0; text-align: center;">
+                    <div style="margin-bottom: 8px; font-size: 14px;">Special Role Probability</div>
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                        <input type="number" id="rolePercentage" value="33" min="0" max="100" 
+                            style="width: 60px; background: rgba(0,0,0,0.3); border: 1px solid #667eea; color: white; border-radius: 5px; padding: 5px; text-align: center; font-size: 16px;">
+                        <span style="font-size: 18px; font-weight: bold;">%</span>
+                    </div>
+                    <div style="font-size: 11px; color: #94a3b8; margin-top: 5px;">(Default is 33% or 1/3 of players)</div>
                 </div>
 
                 <div class="names-actions" style="margin-top: 20px;">
@@ -1203,10 +1424,125 @@
             { word: "Saxophone", hints: ["Embouchure", "Alto", "Woodwind", "Jazz", "Reed"] },
             { word: "Spaceship", hints: ["Vessel", "Propulsion", "Interstellar", "Cockpit", "Launch"] },
             { word: "Treehouse", hints: ["Platform", "Hideout", "Canopy", "Nails", "Branches"] },
-            { word: "Microscope", hints: ["Compound", "Magnify", "Bacteria", "Specimen", "Lens"] },
-            { word: "Anchor", hints: ["Secure", "Maritime", "Weigh", "Chain", "Port"] },
-            { word: "Campfire", hints: ["Tinder", "Crackle", "Smoke", "Warmth", "Circle"] },
-            { word: "Tornado", hints: ["Twister", "Alley", "Siren", "Shelter", "Funnel"] }
+            { word: "Cello", hints: ["Orchestra", "Bow", "Spike", "Resonance", "Vibrato"] },
+            { word: "Moonlight", hints: ["Reflection", "Luminous", "Phase", "Lunar", "Beams"] },
+            { word: "Gargoyle", hints: ["Stone", "Cathedral", "Grotesque", "Spout", "Perch"] },
+            { word: "Football", hints: ["Gridiron", "Quarterback", "Touchdown", "Pigskin", "Yardage"] },
+            { word: "Periscope", hints: ["Submarine", "Prism", "Submerged", "Optics", "Sight"] },
+            { word: "Iceberg", hints: ["Calving", "Titanic", "Floating", "Bergy-bit", "Glacial"] },
+            { word: "Museum", hints: ["Exhibit", "Artifact", "Gallery", "Curator", "Collection"] },
+            { word: "Prism", hints: ["Refract", "Glass", "Spectrum", "Geometry", "Light"] },
+            { word: "Polar Bear", hints: ["Arctic", "Tundra", "Marine", "Solitary", "Apex"] },
+            { word: "Windvane", hints: ["Direction", "Aerostat", "Breeze", "Rooftop", "Cardinal"] },
+            { word: "Bonsai", hints: ["Miniature", "Pruning", "Zen", "Potted", "Ancient"] },
+            { word: "Hurricane", hints: ["Cyclone", "Eye", "Saffir", "Surge", "Typhoon"] },
+            { word: "Backgammon", hints: ["Doubling", "Pip", "Checker", "Dice", "Point"] },
+            { word: "Werewolf", hints: ["Lunar", "Lycanthrope", "Shifter", "Silver", "Full"] },
+            { word: "Carnival", hints: ["Midway", "Rides", "Popcorn", "Ferris", "Booth"] },
+            { word: "Surfboard", hints: ["Wax", "Fin", "Leash", "Swell", "Break"] },
+            { word: "Parthenon", hints: ["Athens", "Marble", "Columns", "Acropolis", "Doric"] },
+            { word: "Walrus", hints: ["Tusk", "Blubber", "Pinniped", "Mustache", "Arctic"] },
+            { word: "Sundial", hints: ["Shadow", "Gnomon", "Solar", "Clock", "Time"] },
+            { word: "Mudslide", hints: ["Debris", "Erosion", "Saturation", "Slope", "Torrent"] },
+            { word: "Zodiac", hints: ["Astrology", "Constellation", "Ecliptic", "Sign", "Horoscope"] },
+            { word: "Picnic", hints: ["Blanket", "Hamper", "Ants", "Al-fresco", "Outing"] },
+            { word: "Fireplace", hints: ["Mantel", "Hearth", "Grate", "Andiron", "Log"] },
+            { word: "Platypus", hints: ["Monotreme", "Bill", "Venomous", "Burrow", "Aquatic"] },
+            { word: "Watermill", hints: ["Wheel", "Grindstone", "Flume", "Millrace", "River"] },
+            { word: "Tundra", hints: ["Permafrost", "Treeless", "Arctic", "Biome", "Lichens"] },
+            { word: "Clarinet", hints: ["Ligature", "Bore", "Woodwind", "Keywork", "Reed"] },
+            { word: "Statue", hints: ["Sculpture", "Bronze", "Plinth", "Chisel", "Figure"] },
+            { word: "Swamp", hints: ["Bayou", "Everglade", "Marsh", "Cypress", "Stagnant"] },
+            { word: "Hangglider", hints: ["Airfoil", "Thermal", "Soaring", "Updraft", "Frame"] },
+            { word: "Anemometer", hints: ["Velocity", "Wind", "Rotation", "Cups", "Meteorology"] },
+            { word: "Apothecary", hints: ["Mortar", "Pestle", "Herbs", "Tincture", "Vial"] },
+            { word: "Sarcophagus", hints: ["Stone", "Inscription", "Entomb", "Egyptian", "Relic"] },
+            { word: "Supernova", hints: ["Explosion", "Stellar", "Nebula", "Nucleosynthesis", "Collapse"] },
+            { word: "Relic", hints: ["Antique", "Sacred", "Venerated", "Ancient", "Remnant"] },
+            { word: "Calligraphy", hints: ["Inkwell", "Nib", "Script", "Stroke", "Flourish"] },
+            { word: "Tipi", hints: ["Conical", "Lodge", "Hide", "Poles", "Smoke"] },
+            { word: "Gymnastics", hints: ["Vault", "Pommel", "Chalk", "Parallel", "Floor"] },
+            { word: "Menorah", hints: ["Candles", "Festival", "Branch", "Temple", "Flame"] },
+            { word: "Centaur", hints: ["Archer", "Equine", "Hybrid", "Mythology", "Forest"] },
+            { word: "Hot Springs", hints: ["Geothermal", "Soak", "Basin", "Sulfur", "Therapeutic"] },
+            { word: "Rudder", hints: ["Steering", "Stern", "Vessel", "Control", "Aft"] },
+            { word: "Colossus", hints: ["Giant", "Bronze", "Statue", "Rhodes", "Monolith"] },
+            { word: "Dragonfly", hints: ["Naiad", "Hover", "Wings", "Darter", "Mandible"] },
+            { word: "Riverbed", hints: ["Silt", "Pebbles", "Channel", "Erosion", "Current"] },
+            { word: "Hydrometer", hints: ["Density", "Liquid", "Buoyancy", "Scale", "Specific"] },
+            { word: "Truffle", hints: ["Underground", "Fungus", "Aromatic", "Forage", "Culinary"] },
+            { word: "Laundry Basket", hints: ["Hamper", "Perforated", "Sorting", "Wicker", "Capacity"] },
+            { word: "Walmart", hints: ["Rollback", "Supercenter", "Blue-vest", "Greeter", "Retail"] },
+            { word: "Car Keys", hints: ["Fob", "Ignition", "RFID", "Keychain", "Tumbler"] },
+            { word: "YouTube", hints: ["Subscriber", "Buffer", "Thumbnail", "Algorithm", "Monetize"] },
+            { word: "Microwave", hints: ["Magnetron", "Turntable", "Radiation", "Defrost", "Wattage"] },
+            { word: "Grocery Cart", hints: ["Wobbly", "Handlebar", "Aisle", "Chassis", "Caster"] },
+            { word: "Smartphone", hints: ["Haptic", "OLED", "Interface", "Processor", "Lithium"] },
+            { word: "Refrigerator", hints: ["Compressor", "Freon", "Condenser", "Crisper", "Insulated"] },
+            { word: "Amazon", hints: ["Prime", "Warehouse", "Logistics", "Cardboard", "Marketplace"] },
+            { word: "Dishwasher", hints: ["Racks", "Impeller", "Detergent", "Sanitize", "Cycle"] },
+            { word: "Coffee Maker", hints: ["Carafe", "Brew", "Percolate", "Filter", "Drip"] },
+            { word: "Netflix", hints: ["Streaming", "Binge", "Autoplay", "Profile", "Originals"] },
+            { word: "Backpack", hints: ["Shoulder", "Zipper", "Canvas", "Ergonomic", "Compartment"] },
+            { word: "Vacuum", hints: ["Suction", "Canister", "Cyclone", "HEPA", "Agitator"] },
+            { word: "Starbucks", hints: ["Barista", "Roast", "Venti", "Caffeine", "Syrup"] },
+            { word: "Google", hints: ["Search", "Engine", "Indexing", "Query", "Alphabet"] },
+            { word: "Toaster", hints: ["Heating-element", "Lever", "Crumb-tray", "Brownness", "Slot"] },
+            { word: "Credit Card", hints: ["Magnetic", "Chip", "CVV", "Limit", "Transaction"] },
+            { word: "Doorbell", hints: ["Chime", "Button", "Voltage", "Ringer", "Entrance"] },
+            { word: "Headphones", hints: ["Driver", "Wireless", "Noise-cancelling", "Aural", "Bluetooth"] },
+            { word: "Remote Control", hints: ["Infrared", "Infrared", "Channel", "Battery", "Signal"] },
+            { word: "Washing Machine", hints: ["Agitator", "Spin", "Basin", "Centrifugal", "Load"] },
+            { word: "Treadmill", hints: ["Incline", "Belt", "Cardio", "Motorized", "Pace"] },
+            { word: "Parking Lot", hints: ["Asphalt", "Space", "Striping", "Stall", "Bollard"] },
+            { word: "Selfie Stick", hints: ["Extendable", "Monopod", "Angle", "Bluetooth", "Tourism"] },
+            { word: "AirPods", hints: ["Wireless", "Charging-case", "Pairing", "Bluetooth", "Stem"] },
+            { word: "Amazon Alexa", hints: ["Assistant", "Speaker", "Voice-command", "Skill", "Smart-home"] },
+            { word: "McDonald's", hints: ["Burger", "Drive-thru", "Franchise", "Nuggets", "Clown"] },
+            { word: "Starbucks Cup", hints: ["Sleeve", "Cardboard", "Polyethylene", "Logo", "Disposable"] },
+            { word: "Vending Machine", hints: ["Coils", "Currency", "Dispense", "Snack", "Refrigerated"] },
+            { word: "ATM", hints: ["Transaction", "Withdrawal", "PIN", "Terminal", "Banking"] },
+            { word: "Elevator", hints: ["Hoistway", "Counterweight", "Capacity", "Shaft", "Floor"] },
+            { word: "Escalator", hints: ["Steps", "Handrail", "Truss", "Continuous", "Landing"] },
+            { word: "Keypad", hints: ["Digits", "Entry", "Security", "Input", "Electronic"] },
+            { word: "Traffic Light", hints: ["Signal", "Intersection", "Sequence", "Red", "Amber"] },
+            { word: "Fire Extinguisher", hints: ["Pressure", "Nozzle", "Chemical", "Safety", "Cylinder"] },
+            { word: "Shopping Mall", hints: ["Food-court", "Anchor-store", "Plaza", "Retail", "Concours"] },
+            { word: "Parking Meter", hints: ["Coin-slot", "Time-limit", "Enforcement", "Curb", "Digital"] },
+            { word: "Coffee Pod", hints: ["Espresso", "Aluminum", "Pressure", "Capsule", "Machine"] },
+            { word: "Power Strip", hints: ["Outlets", "Surge", "Cord", "Switch", "Electrical"] },
+            { word: "Toilet Paper", hints: ["Ply", "Roll", "Perforated", "Softness", "Bathroom"] },
+            { word: "Garden Hose", hints: ["Nozzle", "Vinyl", "Spigot", "Pressure", "Coil"] },
+            { word: "Doorstop", hints: ["Wedge", "Rubber", "Friction", "Prop", "Entryway"] },
+            { word: "Extension Cord", hints: ["Voltage", "Length", "Plug", "Current", "Insulation"] },
+            { word: "Duct Tape", hints: ["Adhesive", "Resin", "Reinforced", "Silver", "Repair"] },
+            { word: "Post-it Note", hints: ["Adhesive", "Stationery", "Yellow", "Reminder", "Square"] },
+            { word: "Flashlight", hints: ["Lumen", "Reflector", "Battery", "Beam", "LED"] },
+            { word: "Umbrella", hints: ["Canopy", "Ribs", "Shaft", "Precipitation", "Handle"] },
+            { word: "Waffle Iron", hints: ["Griddle", "Batter", "Honeycomb", "Heating", "Breakfast"] },
+            { word: "Target", hints: ["Red-card", "Retail", "Aisle", "Cart", "Discount"] },
+            { word: "Lego", hints: ["Interlocking", "Studs", "Plastic", "Minifigure", "Brick"] },
+            { word: "Air-Conditioner", hints: ["Refrigerant", "Blower", "Thermostat", "Condensation", "HVAC"] },
+            { word: "Electric-Guitar", hints: ["Amplifier", "Pickup", "Fretboard", "Distortion", "Tremolo"] },
+            { word: "Calculator", hints: ["Function", "Display", "Scientific", "Arithmetic", "Digit"] },
+            { word: "Ziploc-Bag", hints: ["Polyethylene", "Sealant", "Transparent", "Storage", "Airtight"] },
+            { word: "Yoga-Mat", hints: ["Traction", "Rubber", "Flexibility", "Padding", "Studio"] },
+            { word: "Fire-Alarm", hints: ["Sensor", "Siren", "Safety", "Detector", "Battery"] },
+            { word: "Parking-Ticket", hints: ["Violation", "Fine", "Windshield", "Officer", "Ordinance"] },
+            { word: "Coffee-Filter", hints: ["Porous", "Percolate", "Paper", "Grinds", "Drip"] },
+            { word: "Headlight", hints: ["Illumination", "Halogen", "Beam", "Reflector", "Bulb"] },
+            { word: "Supermarket", hints: ["Produce", "Checkout", "Inventory", "Groceries", "Scanner"] },
+            { word: "Stapler", hints: ["Binding", "Metal", "Clinch", "Stationery", "Magazine"] },
+            { word: "Toothpaste", hints: ["Fluoride", "Abrasive", "Mint", "Tube", "Hygiene"] },
+            { word: "Paper-Clip", hints: ["Tension", "Wire", "Loop", "Bundle", "Metal"] },
+            { word: "Solar-Panel", hints: ["Photovoltaic", "Renewable", "Silicon", "Grid", "Energy"] },
+            { word: "Suitcase", hints: ["Luggage", "Wheels", "Travel", "Packing", "Handle"] },
+            { word: "Keyboard", hints: ["QWERTY", "Switch", "Input", "Keycap", "Peripheral"] },
+            { word: "Vending-Machine", hints: ["Snack", "Currency", "Dispense", "Coil", "Selection"] },
+            { word: "Washing-Machine", hints: ["Agitator", "Spin", "Cycle", "Laundry", "Detergent"] },
+            { word: "Dish-Soap", hints: ["Surfactant", "Grease", "Bubbles", "Liquid", "Cleaning"] },
+            { word: "Pizza-Box", hints: ["Cardboard", "Delivery", "Grease", "Square", "Insulated"] },
+            { word: "Flash-Drive", hints: ["Storage", "USB", "Portable", "Memory", "Digital"] }
         ];
 
         let currentPlayer = 1;
@@ -1231,7 +1567,228 @@
             doubleAgent: { name: "The Double Agent", color: "#dc2626" },
             protector: { name: "The Protector", color: "#10b981" },
             framer: { name: "The Framer", color: "#8b5cf6" },
-            informant: { name: "The Informant", color: "#3b82f6" }
+            informant: { name: "The Informant", color: "#3b82f6" },
+            paranoid: { name: "The Paranoid", color: "#f97316" },
+            tourist: { name: "The Tourist", color: "#6366f1" },
+            sniper: { name: "The Sniper", color: "#dc2626" },
+            lovers: { name: "Romeo & Juliet", color: "#ec4899" },
+            oracle: { name: "The Oracle", color: "#14b8a6" },
+            mimic: { name: "The Mimic", color: "#a855f7" },
+            lawyer: { name: "The Lawyer", color: "#3b82f6" },
+            thief: { name: "The Thief", color: "#f59e0b" },
+            twin: { name: "The Twin", color: "#10b981" }
+        };
+
+        // Synonyms for paranoid role - organized by word
+        const synonymWords = {
+            "Ocean": ["Sea", "Lake", "Bay"],
+            "Piano": ["Keyboard", "Organ", "Synthesizer"],
+            "Dragon": ["Beast", "Monster", "Serpent"],
+            "Basketball": ["Sports", "Ball", "Game"],
+            "Telescope": ["Binoculars", "Scope", "Spyglass"],
+            "Volcano": ["Mountain", "Peak", "Crater"],
+            "Library": ["Archive", "Study", "Bookstore"],
+            "Rainbow": ["Spectrum", "Aurora", "Arc"],
+            "Penguin": ["Bird", "Seabird", "Puffin"],
+            "Lighthouse": ["Tower", "Beacon", "Watchtower"],
+            "Cactus": ["Plant", "Succulent", "Shrub"],
+            "Tornado": ["Storm", "Cyclone", "Twister"],
+            "Chessboard": ["Board", "Grid", "Checkerboard"],
+            "Vampire": ["Monster", "Creature", "Bat"],
+            "Circus": ["Show", "Fair", "Carnival"],
+            "Skateboard": ["Board", "Deck", "Scooter"],
+            "Pyramid": ["Monument", "Structure", "Triangle"],
+            "Dolphin": ["Mammal", "Porpoise", "Whale"],
+            "Compass": ["Navigator", "Instrument", "Tool"],
+            "Avalanche": ["Slide", "Landslide", "Snow"],
+            "Submarine": ["Vessel", "Ship", "Boat"],
+            "Hammock": ["Bed", "Swing", "Net"],
+            "Chimney": ["Flue", "Vent", "Stack"],
+            "Kangaroo": ["Animal", "Wallaby", "Marsupial"],
+            "Windmill": ["Mill", "Turbine", "Generator"],
+            "Glacier": ["Ice", "Iceberg", "Snow"],
+            "Accordion": ["Instrument", "Squeeze-box", "Concertina"],
+            "Scarecrow": ["Figure", "Dummy", "Effigy"],
+            "Quicksand": ["Sand", "Trap", "Bog"],
+            "Parachute": ["Canopy", "Glider", "Sail"],
+            "Coral": ["Reef", "Organism", "Formation"],
+            "Microscope": ["Lens", "Instrument", "Tool"],
+            "Treasure": ["Riches", "Loot", "Wealth"],
+            "Eclipse": ["Shadow", "Event", "Phenomenon"],
+            "Fossil": ["Relic", "Remains", "Artifact"],
+            "Origami": ["Art", "Paper", "Craft"],
+            "Igloo": ["Shelter", "House", "Dwelling"],
+            "Trampoline": ["Bouncer", "Mat", "Platform"],
+            "Cobweb": ["Web", "Net", "Thread"],
+            "Chandelier": ["Light", "Fixture", "Lamp"],
+            "Unicorn": ["Horse", "Creature", "Beast"],
+            "Geyser": ["Spring", "Fountain", "Vent"],
+            "Anchor": ["Weight", "Hook", "Device"],
+            "Sphinx": ["Statue", "Monument", "Guardian"],
+            "Caterpillar": ["Larva", "Worm", "Insect"],
+            "Waterfall": ["Falls", "Cascade", "Rapids"],
+            "Thermometer": ["Gauge", "Instrument", "Measure"],
+            "Mushroom": ["Fungus", "Toadstool", "Plant"],
+            "Labyrinth": ["Maze", "Puzzle", "Path"],
+            "Hourglass": ["Timer", "Clock", "Glass"],
+            "Boomerang": ["Tool", "Weapon", "Stick"],
+            "Campfire": ["Fire", "Bonfire", "Flame"],
+            "Beehive": ["Hive", "Nest", "Colony"],
+            "Carousel": ["Ride", "Merry-go-round", "Wheel"],
+            "Fountain": ["Water", "Spring", "Feature"],
+            "Meteor": ["Rock", "Asteroid", "Comet"],
+            "Peacock": ["Bird", "Fowl", "Pheasant"],
+            "Skeleton": ["Bones", "Frame", "Structure"],
+            "Thunderstorm": ["Storm", "Weather", "Tempest"],
+            "Barbershop": ["Shop", "Salon", "Parlor"],
+            "Magnet": ["Metal", "Lodestone", "Attractor"],
+            "Blizzard": ["Storm", "Snowstorm", "Weather"],
+            "Castle": ["Fortress", "Fort", "Palace"],
+            "Satellite": ["Device", "Probe", "Orbiter"],
+            "Jungle": ["Forest", "Rainforest", "Woods"],
+            "Rollercoaster": ["Ride", "Track", "Coaster"],
+            "Anthill": ["Mound", "Nest", "Hill"],
+            "Snowman": ["Figure", "Sculpture", "Snow"],
+            "Seesaw": ["Swing", "Lever", "Teeter-totter"],
+            "Bagpipes": ["Instrument", "Pipes", "Woodwind"],
+            "Cobblestone": ["Stone", "Paving", "Rock"],
+            "Watermelon": ["Fruit", "Melon", "Berry"],
+            "Crocodile": ["Reptile", "Alligator", "Predator"],
+            "Sandcastle": ["Castle", "Structure", "Sand"],
+            "Butterfly": ["Insect", "Moth", "Bug"],
+            "Ambulance": ["Vehicle", "Van", "Transport"],
+            "Dandelion": ["Flower", "Weed", "Plant"],
+            "Toothbrush": ["Brush", "Tool", "Implement"],
+            "Sunflower": ["Flower", "Plant", "Bloom"],
+            "Fishbowl": ["Bowl", "Tank", "Container"],
+            "Xylophone": ["Instrument", "Percussion", "Glockenspiel"],
+            "Stopwatch": ["Timer", "Watch", "Clock"],
+            "Camera": ["Device", "Recorder", "Tool"],
+            "Balloon": ["Ball", "Bubble", "Float"],
+            "Pumpkin": ["Gourd", "Squash", "Vegetable"],
+            "Dentist": ["Doctor", "Professional", "Specialist"],
+            "Saxophone": ["Instrument", "Brass", "Horn"],
+            "Spaceship": ["Rocket", "Craft", "Ship"],
+            "Treehouse": ["House", "Fort", "Structure"],
+            "Cello": ["Violoncello", "Instrument", "Strings"],
+            "Moonlight": ["Glow", "Radiance", "Shine"],
+            "Gargoyle": ["Statue", "Grotesque", "Figure"],
+            "Football": ["Soccer", "Sport", "Ball"],
+            "Periscope": ["Scope", "Viewer", "Optics"],
+            "Iceberg": ["Berg", "Floe", "Ice"],
+            "Museum": ["Archive", "Gallery", "Institution"],
+            "Prism": ["Crystal", "Glass", "Polyhedron"],
+            "Polar Bear": ["Ursus", "Animal", "Predator"],
+            "Windvane": ["Weathercock", "Indicator", "Pointer"],
+            "Bonsai": ["Tree", "Shrub", "Plant"],
+            "Hurricane": ["Cyclone", "Typhoon", "Tempest"],
+            "Backgammon": ["Game", "Board-game", "Table"],
+            "Werewolf": ["Lycan", "Wolfman", "Monster"],
+            "Carnival": ["Fair", "Festival", "Celebration"],
+            "Surfboard": ["Board", "Plank", "Deck"],
+            "Parthenon": ["Temple", "Shrine", "Monument"],
+            "Walrus": ["Mammal", "Pinniped", "Animal"],
+            "Sundial": ["Clock", "Timer", "Indicator"],
+            "Mudslide": ["Landslide", "Avalanche", "Slump"],
+            "Zodiac": ["Signs", "Circle", "Chart"],
+            "Picnic": ["Meal", "Outing", "Lunch"],
+            "Fireplace": ["Hearth", "Grate", "Chimney"],
+            "Platypus": ["Mammal", "Ornithorhynchus", "Creature"],
+            "Watermill": ["Mill", "Wheel", "Grinder"],
+            "Tundra": ["Plain", "Steppe", "Wilderness"],
+            "Clarinet": ["Woodwind", "Instrument", "Pipe"],
+            "Statue": ["Sculpture", "Effigy", "Icon"],
+            "Swamp": ["Marsh", "Bog", "Quagmire"],
+            "Hangglider": ["Kite", "Aircraft", "Glider"],
+            "Anemometer": ["Gauge", "Sensor", "Meter"],
+            "Apothecary": ["Pharmacy", "Chemist", "Druggist"],
+            "Sarcophagus": ["Coffin", "Tomb", "Casket"],
+            "Supernova": ["Explosion", "Star", "Nova"],
+            "Relic": ["Remnant", "Antique", "Artifact"],
+            "Calligraphy": ["Writing", "Script", "Art"],
+            "Tipi": ["Tent", "Lodge", "Shelter"],
+            "Gymnastics": ["Acrobatics", "Sport", "Exercise"],
+            "Menorah": ["Candelabra", "Lamp", "Candlestick"],
+            "Centaur": ["Creature", "Myth", "Hybrid"],
+            "Hot Springs": ["Thermal", "Spa", "Bath"],
+            "Rudder": ["Helm", "Vane", "Blade"],
+            "Colossus": ["Giant", "Behemoth", "Titan"],
+            "Dragonfly": ["Insect", "Fly", "Bug"],
+            "Riverbed": ["Channel", "Bottom", "Gully"],
+            "Hydrometer": ["Gauge", "Meter", "Sensor"],
+            "Truffle": ["Fungus", "Mushroom", "Delicacy"],
+            "Laundry Basket": ["Hamper", "Bin", "Container"],
+            "Walmart": ["Store", "Market", "Retailer"],
+            "Car Keys": ["Opener", "Fob", "Access"],
+            "YouTube": ["Platform", "Video-site", "Media"],
+            "Microwave": ["Oven", "Appliance", "Cooker"],
+            "Grocery Cart": ["Trolley", "Wagon", "Basket"],
+            "Smartphone": ["Mobile", "Cell", "Device"],
+            "Refrigerator": ["Fridge", "Cooler", "Freezer"],
+            "Amazon": ["Retailer", "Giant", "Store"],
+            "Dishwasher": ["Cleaner", "Appliance", "Washer"],
+            "Coffee Maker": ["Machine", "Brewer", "Pot"],
+            "Netflix": ["Service", "Streamer", "Network"],
+            "Backpack": ["Bag", "Knapsack", "Rucksack"],
+            "Vacuum": ["Cleaner", "Hoover", "Suction"],
+            "Starbucks": ["Cafe", "Coffeehouse", "Shop"],
+            "Google": ["Portal", "Search", "Site"],
+            "Toaster": ["Appliance", "Heater", "Cooker"],
+            "Credit Card": ["Plastic", "Card", "Payment"],
+            "Doorbell": ["Chime", "Buzzer", "Alarm"],
+            "Headphones": ["Earphones", "Headset", "Buds"],
+            "Remote Control": ["Clicker", "Remote", "Controller"],
+            "Washing Machine": ["Washer", "Laundry", "Appliance"],
+            "Treadmill": ["Runner", "Machine", "Trainer"],
+            "Parking Lot": ["Garage", "Car-park", "Area"],
+            "Selfie Stick": ["Pole", "Handle", "Mount"],
+            "AirPods": ["Earbuds", "Headphones", "Audio"],
+            "Amazon Alexa": ["Assistant", "Echo", "Speaker"],
+            "McDonald's": ["Fast-food", "Restaurant", "Eatery"],
+            "Starbucks Cup": ["Container", "Vessel", "Tumbler"],
+            "Vending Machine": ["Dispenser", "Automat", "Vendor"],
+            "ATM": ["Machine", "Bank", "Teller"],
+            "Elevator": ["Lift", "Car", "Transport"],
+            "Escalator": ["Stairs", "Moving-stairway", "Lift"],
+            "Keypad": ["Buttons", "Input", "Interface"],
+            "Traffic Light": ["Signal", "Beacon", "Lamp"],
+            "Fire Extinguisher": ["Safety-device", "Suppression", "Canister"],
+            "Shopping Mall": ["Center", "Plaza", "Galleria"],
+            "Parking Meter": ["Timer", "Device", "Collector"],
+            "Coffee Pod": ["Capsule", "Filter", "Packet"],
+            "Power Strip": ["Adapter", "Multi-plug", "Surge-protector"],
+            "Toilet Paper": ["Tissue", "Roll", "Paper"],
+            "Garden Hose": ["Pipe", "Tube", "Line"],
+            "Doorstop": ["Wedge", "Block", "Buffer"],
+            "Extension Cord": ["Lead", "Wire", "Cable"],
+            "Duct Tape": ["Tape", "Adhesive", "Binder"],
+            "Post-it Note": ["Stationery", "Sticky-note", "Memo"],
+            "Flashlight": ["Torch", "Lantern", "Light"],
+            "Umbrella": ["Parasol", "Cover", "Brolly"],
+            "Waffle Iron": ["Grill", "Maker", "Appliance"],
+            "Target": ["Store", "Shop", "Retailer"],
+            "Lego": ["Blocks", "Bricks", "Toys"],
+            "Air-Conditioner": ["Cooler", "AC", "Unit"],
+            "Electric-Guitar": ["Instrument", "Guitar", "Axe"],
+            "Calculator": ["Machine", "Device", "Computer"],
+            "Ziploc-Bag": ["Pouch", "Bag", "Container"],
+            "Yoga-Mat": ["Pad", "Rug", "Surface"],
+            "Fire-Alarm": ["Buzzer", "Alert", "Warning"],
+            "Parking-Ticket": ["Citation", "Notice", "Penalty"],
+            "Coffee-Filter": ["Strainer", "Screen", "Paper"],
+            "Headlight": ["Lamp", "Light", "Lantern"],
+            "Supermarket": ["Grocery", "Mart", "Store"],
+            "Stapler": ["Fastener", "Binder", "Tool"],
+            "Toothpaste": ["Dentifrice", "Gel", "Paste"],
+            "Paper-Clip": ["Fastener", "Wire", "Clip"],
+            "Solar-Panel": ["Collector", "Cell", "Array"],
+            "Suitcase": ["Bag", "Trunk", "Valise"],
+            "Keyboard": ["Board", "Input-device", "Typewriter"],
+            "Vending-Machine": ["Dispenser", "Vendor", "Automat"],
+            "Washing-Machine": ["Washer", "Laundry-unit", "Appliance"],
+            "Dish-Soap": ["Detergent", "Cleaner", "Degreaser"],
+            "Pizza-Box": ["Carton", "Container", "Case"],
+            "Flash-Drive": ["Stick", "Thumb-drive", "Storage"]
         };
 
         function getPlayerDisplay(playerNum) {
@@ -1536,7 +2093,7 @@
             playerRoles = {};
             roleAssignments = {};
             if (rolesEnabled) {
-                assignRoles();
+                assignRoles(imposterHint);
             }
             
             setupPlayer();
@@ -1546,47 +2103,85 @@
             contentHeight = contentArea.clientHeight;
         }
 
-        function assignRoles() {
-            const availablePlayers = [];
+        function assignRoles(imposterHint) {
+            // 1. Calculate how many special roles to hand out
+            const percentInput = document.getElementById('rolePercentage');
+            const percentage = percentInput ? parseInt(percentInput.value) : 33;
+            let roleCount = Math.max(1, Math.floor(totalPlayers * (percentage / 100)));
+
+            // 2. Separate players into two pools: Imposters and Citizens
+            const imposterPool = [...imposters]; 
+            const citizenPool = [];
             for (let i = 1; i <= totalPlayers; i++) {
-                availablePlayers.push(i);
+                if (!imposters.includes(i)) {
+                    citizenPool.push(i);
+                }
             }
+
+            // 3. Get and shuffle enabled roles
+            const enabledCheckboxes = document.querySelectorAll('.role-checkbox:checked');
+            let roleTypes = Array.from(enabledCheckboxes).map(cb => cb.dataset.role);
+            if (roleTypes.length === 0) roleTypes = ['jester'];
             
-            // Shuffle available players
-            for (let i = availablePlayers.length - 1; i > 0; i--) {
+            // Shuffle roles
+            for (let i = roleTypes.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [availablePlayers[i], availablePlayers[j]] = [availablePlayers[j], availablePlayers[i]];
+                [roleTypes[i], roleTypes[j]] = [roleTypes[j], roleTypes[i]];
             }
-            
-            // Determine number of roles (about 1/3 of players)
-            const roleCount = Math.max(1, Math.floor(totalPlayers / 3));
-            const roleTypes = ['jester', 'doubleAgent', 'protector', 'framer', 'informant'];
-            
+
             let rolesAssigned = 0;
-            for (let i = 0; i < availablePlayers.length && rolesAssigned < roleCount; i++) {
-                const player = availablePlayers[i];
-                const roleType = roleTypes[rolesAssigned % roleTypes.length];
-                
-                // Skip if this would conflict with imposter role
-                if (roleType === 'doubleAgent' && imposters.includes(player)) {
-                    continue;
-                }
-                if (roleType === 'jester' && imposters.includes(player)) {
-                    continue;
-                }
-                
-                playerRoles[player] = roleType;
-                
-                // Assign targets for protector and framer
-                if (roleType === 'protector' || roleType === 'framer') {
-                    const possibleTargets = [];
-                    for (let j = 1; j <= totalPlayers; j++) {
-                        if (j !== player) possibleTargets.push(j);
+            let loversAssigned = false;
+            let twinsAssigned = [];
+
+            // 4. Assign roles using the shuffled roleTypes list
+            for (let roleType of roleTypes) {
+                if (rolesAssigned >= roleCount) break;
+
+                // --- CASE A: Roles that MUST go to Imposters (Sniper) ---
+                if (roleType === 'sniper') {
+                    const availableImps = imposterPool.filter(p => !playerRoles[p]);
+                    if (availableImps.length > 0) {
+                        const targetImp = availableImps[Math.floor(Math.random() * availableImps.length)];
+                        playerRoles[targetImp] = 'sniper';
+                        rolesAssigned++;
                     }
-                    roleAssignments[player] = possibleTargets[Math.floor(Math.random() * possibleTargets.length)];
-                }
+                } 
                 
-                rolesAssigned++;
+                // --- CASE B: Roles that involve 2 players (Lovers/Twins) ---
+                // These MUST only pull from the Citizen Pool to protect the Imposter count
+                else if ((roleType === 'lovers' || roleType === 'twin') && citizenPool.filter(p => !playerRoles[p]).length >= 2) {
+                    const pool = citizenPool.filter(p => !playerRoles[p]);
+                    const p1 = pool[0];
+                    const p2 = pool[1];
+
+                    playerRoles[p1] = roleType;
+                    playerRoles[p2] = roleType;
+                    roleAssignments[p1] = p2;
+                    roleAssignments[p2] = p1;
+
+                    if (roleType === 'twin') {
+                        const nonImposterHints = currentGameData.hints.filter(h => h !== imposterHint);
+                        roleAssignments[`twinHint`] = nonImposterHints[Math.floor(Math.random() * nonImposterHints.length)];
+                    }
+                    rolesAssigned += 2;
+                }
+
+                // --- CASE C: Standard Roles (Jester, Oracle, etc.) ---
+                // These MUST only pull from the Citizen Pool
+                else {
+                    const availableCits = citizenPool.filter(p => !playerRoles[p]);
+                    if (availableCits.length > 0) {
+                        const targetCit = availableCits[0];
+                        playerRoles[targetCit] = roleType;
+                        
+                        // Handle targets for Protector/Framer
+                        if (roleType === 'protector' || roleType === 'framer') {
+                            const possibleTargets = Array.from({length: totalPlayers}, (_, i) => i + 1).filter(p => p !== targetCit);
+                            roleAssignments[targetCit] = possibleTargets[Math.floor(Math.random() * possibleTargets.length)];
+                        }
+                        rolesAssigned++;
+                    }
+                }
             }
         }
 
@@ -1645,7 +2240,7 @@
             } else if (playerRole === 'protector') {
                 roleInfo = `
                     <div class="role-info-top protector">
-                        <div class="role-description-compact">Win ONLY if your target survives voting.</div>
+                        <div class="role-description-compact">Win with the citizens ONLY if your target survives voting.</div>
                         <div class="role-target-compact">Protect: ${getPlayerDisplay(roleAssignments[currentPlayer])}</div>
                     </div>
                 `;
@@ -1685,6 +2280,148 @@
                         <div class="hints">
                             <div class="hint-tag">${imposterHint}</div>
                         </div>
+                    </div>
+                `;
+            } else if (playerRole === 'paranoid') {
+                const synonymWord = synonymWords[currentGameData.word] ? synonymWords[currentGameData.word][Math.floor(Math.random() * synonymWords[currentGameData.word].length)] : currentGameData.word;
+                roleInfo = `
+                    <div class="role-info-top paranoid">
+                        <div class="role-description-compact">You're a citizen. Your word is correct (trust it!).</div>
+                    </div>
+                `;
+                
+                wordSection = `
+                    <div class="word-section">
+                        <div class="role-badge" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);">😰 The Paranoid</div>
+                        <div class="word">${synonymWord}</div>
+                    </div>
+                `;
+            } else if (playerRole === 'tourist') {
+                roleInfo = `
+                    <div class="role-info-top tourist">
+                        <div class="role-description-compact">You're a citizen with NO word. Blend in!</div>
+                    </div>
+                `;
+                
+                wordSection = `
+                    <div class="word-section">
+                        <div class="role-badge" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">🧳 The Tourist</div>
+                        <div style="font-size: 20px; color: #9ca3af; margin-top: 15px; font-style: italic;">You have no word</div>
+                        <div style="font-size: 14px; color: #718096; margin-top: 8px;">Listen carefully and blend in!</div>
+                    </div>
+                `;
+            } else if (playerRole === 'sniper') {
+                roleInfo = `
+                    <div class="role-info-top sniper">
+                        <div class="role-description-compact">If voted out, guess the real word to steal the win!</div>
+                    </div>
+                `;
+                
+                wordSection = `
+                    <div class="word-section">
+                        <div class="role-badge" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);">🎯 The Sniper</div>
+                        <div style="font-size: 14px; color: #a0aec0; margin-top: 10px;">Your Hint:</div>
+                        <div class="hints">
+                            <div class="hint-tag">${imposterHint}</div>
+                        </div>
+                    </div>
+                `;
+            } else if (playerRole === 'lovers') {
+                roleInfo = `
+                    <div class="role-info-top lovers">
+                        <div class="role-description-compact">Both of you must survive. Word doesn't matter.</div>
+                        <div class="role-target-compact">Partner: ${getPlayerDisplay(roleAssignments[currentPlayer])}</div>
+                    </div>
+                `;
+                
+                const isLoverImposter = imposters.includes(currentPlayer);
+                wordSection = `
+                    <div class="word-section">
+                        <div class="role-badge" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);">💕 Romeo & Juliet</div>
+                        ${isLoverImposter ? `
+                            <div style="font-size: 14px; color: #a0aec0; margin-top: 10px;">Your Hint:</div>
+                            <div class="hints">
+                                <div class="hint-tag">${imposterHint}</div>
+                            </div>
+                        ` : `<div class="word">${currentGameData.word}</div>`}
+                    </div>
+                `;
+            } else if (playerRole === 'oracle') {
+                roleInfo = `
+                    <div class="role-info-top oracle">
+                        <div class="role-description-compact">Your clue MUST be exactly ONE syllable! Win with the citizens, if you survive</div>
+                    </div>
+                `;
+                
+                wordSection = `
+                    <div class="word-section">
+                        <div class="role-badge" style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);">🔮 The Oracle</div>
+                        <div class="word">${currentGameData.word}</div>
+                        <div style="font-size: 13px; color: #14b8a6; margin-top: 10px; font-weight: bold;">⚠️ One syllable only!</div>
+                    </div>
+                `;
+            } else if (playerRole === 'mimic') {
+                roleInfo = `
+                    <div class="role-info-top mimic">
+                        <div class="role-description-compact">Copy the player before you. Rhyme or synonym. Survive to win.</div>
+                    </div>
+                `;
+                
+                wordSection = `
+                    <div class="word-section">
+                        <div class="role-badge" style="background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);">🎭 The Mimic</div>
+                        <div style="font-size: 18px; color: #9ca3af; margin-top: 15px; font-style: italic;">No word given</div>
+                        <div style="font-size: 14px; color: #718096; margin-top: 8px;">Listen to the player before you!</div>
+                    </div>
+                `;
+            } else if (playerRole === 'lawyer') {
+                roleInfo = `
+                    <div class="role-info-top lawyer">
+                        <div class="role-description-compact">Before voting: Choose one player to protect from elimination.</div>
+                    </div>
+                `;
+                
+                wordSection = `
+                    <div class="word-section">
+                        <div class="role-badge" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">⚖️ The Lawyer</div>
+                        <div class="word">${currentGameData.word}</div>
+                    </div>
+                `;
+            } else if (playerRole === 'thief') {
+                roleInfo = `
+                    <div class="role-info-top thief">
+                        <div class="role-description-compact">Win if imposters win AND you survive.</div>
+                    </div>
+                `;
+                
+                wordSection = `
+                    <div class="word-section">
+                        <div class="role-badge" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">🦹 The Thief</div>
+                        <div style="font-size: 14px; color: #a0aec0; margin-top: 10px;">Imposters' Hint:</div>
+                        <div class="hints">
+                            <div class="hint-tag">${imposterHint}</div>
+                        </div>
+                        <div style="font-size: 13px; color: #9ca3af; margin-top: 12px; font-style: italic;">Help imposters secretly</div>
+                    </div>
+                `;
+            } else if (playerRole === 'twin') {
+                const twinHint = roleAssignments['twinHint'] || currentGameData.hints[0];
+                const otherTwinNum = roleAssignments[currentPlayer];
+                roleInfo = `
+                    <div class="role-info-top twin">
+                        <div class="role-description-compact">Another Twin exists. Both must survive for you to win.</div>
+                    </div>
+                `;
+                
+                wordSection = `
+                    <div class="word-section">
+                        <div class="role-badge" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">👯 The Twin</div>
+                        <div class="word">${currentGameData.word}</div>
+                        <div style="font-size: 14px; color: #a0aec0; margin-top: 10px;">Twin Hint (shared):</div>
+                        <div class="hints">
+                            <div class="hint-tag">${twinHint}</div>
+                        </div>
+                        <div style="font-size: 13px; color: #9ca3af; margin-top: 10px; font-style: italic;">Your twin doesn't know who you are</div>
                     </div>
                 `;
             } else if (isImposter) {

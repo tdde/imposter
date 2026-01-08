@@ -1333,8 +1333,10 @@
                         <span>🎭</span>
                         <span style="color: #a855f7;">The Mimic</span>
                     </div>
-                    <div class="role-help-desc">No word. Rhyme with or copy the player before you.</div>
-                    <div class="role-help-team">Solo/Neutral</div>
+                    <div class="role-help-desc">
+                        You have no word. Your clue must either <strong>rhyme</strong> with or be a <strong>synonym</strong> of the clue given by the player immediately before you.
+                    </div>
+                    <div class="role-help-team">Citizen</div>
                 </div>
 
                 <div class="role-help-card lawyer">
@@ -1360,7 +1362,7 @@
                         <span style="color: #f59e0b;">The Thief</span>
                     </div>
                     <div class="role-help-desc">You know the real word. If the Citizens vote wrong, you can save the game by correctly guessing the Imposter's hint word!</div>
-                    <div class="role-help-team">Citizen Team</div>
+                    <div class="role-help-team">Citizen Team - The Secret Weapon</div>
                 </div>
 
                 <div class="role-help-card twin">
@@ -1469,7 +1471,7 @@
             { word: "Lighthouse", hints: ["Sentinel", "Maritime", "Keeper", "Navigation", "Beam"] },
             { word: "Cactus", hints: ["Arid", "Prickly", "Succulent", "Sonoran", "Needles"] },
             { word: "Tornado", hints: ["Vortex", "Alley", "Fujita", "Cyclone", "Debris"] },
-            { word: "Chessboard", hints: ["Diagonal", "Endgame", "Gambit", "Rank", "File"] },
+            { word: "Chessboard", hints: ["Diagonal", "Endgame", "Gambit", "Rank", "Grid"] },
             { word: "Vampire", hints: ["Nocturnal", "Coffin", "Garlic", "Stake", "Undead"] },
             { word: "Circus", hints: ["Juggle", "Trapeze", "Ringmaster", "Canvas", "Sawdust"] },
             { word: "Skateboard", hints: ["Ollie", "Kickflip", "Halfpipe", "Bearings", "Concrete"] },
@@ -2494,17 +2496,13 @@
                     </div>
                 `;
             } else if (playerRole === 'mimic') {
-                roleInfo = `
-                    <div class="role-info-top mimic">
-                        <div class="role-description-compact">Copy the player before you. Rhyme or synonym. Survive to win.</div>
-                    </div>
-                `;
-                
                 wordSection = `
                     <div class="word-section">
-                        <div class="role-badge" style="background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);">🎭 The Mimic</div>
-                        <div style="font-size: 18px; color: #9ca3af; margin-top: 15px; font-style: italic;">No word given</div>
-                        <div style="font-size: 14px; color: #718096; margin-top: 8px;">Listen to the player before you!</div>
+                        <div class="role-badge" style="background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); color: white;">🎭 The Mimic</div>
+                        <div style="font-size: 18px; color: #ef4444; margin-top: 10px; font-weight: bold;">⚠️ NO WORD ASSIGNED</div>
+                        <div class="role-info-top" style="margin-top: 15px; background: rgba(168, 85, 247, 0.1); border: 1px solid #a855f7; color: white; padding: 12px; border-radius: 8px; font-size: 14px;">
+                            <strong>Your Mission:</strong> You don't know the word. To survive, your clue must <strong>rhyme</strong> with or be a <strong>synonym</strong> of the person who speaks right before you!
+                        </div>
                     </div>
                 `;
             } else if (playerRole === 'lawyer') {
@@ -2718,4 +2716,3 @@
     </script>
 </body>
 </html>
-

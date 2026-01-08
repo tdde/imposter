@@ -172,6 +172,72 @@
             margin-bottom: 20px;
         }
 
+        /* This is the container for the whole screen */
+        #rolesHelpScreen {
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto; /* Enable scrolling on the container */
+            padding: 0 !important; /* Remove padding so header hits the edges */
+        }
+
+        /* The Pinned Header */
+        .roles-header {
+            position: sticky;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: #1a1a2e; /* Match your background color exactly */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 999; /* Ensure it stays above the cards */
+            border-bottom: 2px solid rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); /* Adds depth as you scroll */
+        }
+
+        /* Ensure the scrollable content has padding so it doesn't touch the header */
+        .roles-content-wrapper {
+            padding: 15px;
+        }
+
+        /* Style the Back Arrow button */
+        .back-arrow-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            cursor: pointer;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .back-arrow-btn:active {
+            background: rgba(102, 126, 234, 0.5);
+        }
+
+        .toggle-all-btn {
+            background: #667eea;
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        /* Make the scroll area look better */
+        #rolesHelpScreen {
+            padding-top: 0; /* Let the header handle the top */
+            overflow-y: auto;
+        }
+
         .roles-toggle-compact {
             flex: 1;
             display: flex;
@@ -590,7 +656,7 @@
         .role-help-card.paranoid { border-left-color: #f97316; }
         .role-help-card.tourist { border-left-color: #6366f1; }
         .role-help-card.sniper { border-left-color: #dc2626; }
-        .role-help-card.lovers { border-left-color: #ec4899; }
+        .role-help-card.lovers { border-left-color: #822855; }
         .role-help-card.oracle { border-left-color: #14b8a6; }
         .role-help-card.mimic { border-left-color: #a855f7; }
         .role-help-card.lawyer { border-left-color: #3b82f6; }
@@ -736,6 +802,26 @@
             width: 100%;
             max-width: 350px;
         }
+        /* Force all text inside the info boxes to be white */
+        .role-info-top, 
+        .role-description-compact, 
+        .role-target-compact {
+            color: #ffffff !important;
+        }
+
+        /* Specifically for the lovers styling */
+        .role-info-top.lovers {
+            background: rgba(236, 72, 153, 0.15); /* Slight pink tint */
+            border: 1px solid rgba(236, 72, 153, 0.3);
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        /* Ensure the hint label stays readable but separate */
+        .word-section div[style*="color: #a0aec0"] {
+            color: #cbd5e0 !important; /* Slightly brighter gray for "Your Hint:" */
+        }
 
         .role-info-top.jester { border-color: #f59e0b; }
         .role-info-top.double-agent { border-color: #dc2626; }
@@ -745,7 +831,7 @@
         .role-info-top.paranoid { border-color: #f97316; }
         .role-info-top.tourist { border-color: #6366f1; }
         .role-info-top.sniper { border-color: #dc2626; }
-        .role-info-top.lovers { border-color: #ec4899; }
+        .role-info-top.lovers { border-color: #822855; }
         .role-info-top.oracle { border-color: #14b8a6; }
         .role-info-top.mimic { border-color: #a855f7; }
         .role-info-top.lawyer { border-color: #3b82f6; }
@@ -785,11 +871,19 @@
         }
 
         .role-info {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 15px;
-            padding: 15px;
-            margin-bottom: 20px;
-            border: 2px solid;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 14px;
+            /* This ensures the text inside is white */
+            color: #ffffff !important; 
+            border-left: 3px solid #667eea;
+        }
+
+        /* If you have specific spans or strong tags inside that are staying black */
+        .role-info strong, .role-info span {
+            color: #ffffff !important;
         }
 
         .role-info.jester { border-color: #f59e0b; }
@@ -800,7 +894,7 @@
         .role-info.paranoid { border-color: #f97316; }
         .role-info.tourist { border-color: #6366f1; }
         .role-info.sniper { border-color: #dc2626; }
-        .role-info.lovers { border-color: #ec4899; }
+        .role-info.lovers { border-color: #822855; }
         .role-info.oracle { border-color: #14b8a6; }
         .role-info.mimic { border-color: #a855f7; }
         .role-info.lawyer { border-color: #3b82f6; }
@@ -1099,7 +1193,19 @@
             </div>
 
             <div class="roles-help-screen hidden" id="rolesHelpScreen">
-                <div class="roles-help-title">🎭 Special Roles Guide</div>
+                    <div class="roles-header">
+                        <button class="back-arrow-btn" id="rolesHelpBackTop">
+                            <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="19" y1="12" x2="5" y2="12"></line>
+                                <polyline points="12 19 5 12 12 5"></polyline>
+                            </svg>
+                        </button>
+                        <div class="roles-help-title" style="margin: 0; font-size: 1.2rem;">🎭 Special Roles</div>
+                        <button class="toggle-all-btn" id="toggleAllRoles">Toggle All</button>
+                    </div>
+
+                    <div class="roles-content-wrapper">
+                            </div>
                 
                 <div class="role-help-card jester">
                     <div class="role-help-name">
@@ -1253,8 +1359,8 @@
                         <span>🦹</span>
                         <span style="color: #f59e0b;">The Thief</span>
                     </div>
-                    <div class="role-help-desc">You see the imposter hint. Win if imposters win.</div>
-                    <div class="role-help-team">Solo/Neutral</div>
+                    <div class="role-help-desc">You know the real word. If the Citizens vote wrong, you can save the game by correctly guessing the Imposter's hint word!</div>
+                    <div class="role-help-team">Citizen Team - The Secret Weapon</div>
                 </div>
 
                 <div class="role-help-card twin">
@@ -1277,7 +1383,7 @@
                             <span class="slider"></span>
                         </label>
                         <span>💕</span>
-                        <span style="color: #ec4899;">Romeo & Juliet</span>
+                        <span style="color: #822855;">Romeo & Juliet</span>
                     </div>
                     <div class="role-help-desc">Linked pair. Both must survive to win.</div>
                     <div class="role-help-team">Duo team</div>
@@ -1293,9 +1399,7 @@
                     <div style="font-size: 11px; color: #94a3b8; margin-top: 5px;">(Default is 33% or 1/3 of players)</div>
                 </div>
 
-                <div class="names-actions" style="margin-top: 20px;">
-                    <button class="back-button" id="rolesHelpBack">Back</button>
-                </div>
+                
             </div>
 
             <div class="end-game-screen hidden" id="endGameScreen">
@@ -1334,6 +1438,24 @@
     </div>
 
     <script>
+        // Function for Toggle All Logic
+        document.getElementById('toggleAllRoles').addEventListener('click', function() {
+            const checkboxes = document.querySelectorAll('.role-checkbox');
+            const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+            
+            // If more than half are ON, we turn all OFF. Otherwise, turn all ON.
+            const shouldCheck = checkedCount <= (checkboxes.length / 2);
+            
+            checkboxes.forEach(cb => {
+                cb.checked = shouldCheck;
+            });
+        });
+
+        // New Back Arrow Listener
+        document.getElementById('rolesHelpBackTop').addEventListener('click', function() {
+            document.getElementById('rolesHelpScreen').classList.add('hidden');
+        });
+
         const gameData = [
             { word: "Ocean", hints: ["Salty", "Deep", "Current", "Tide", "Marine"] },
             { word: "Piano", hints: ["Ivory", "Concert", "Grand", "Strings", "Octave"] },
@@ -1571,7 +1693,7 @@
             paranoid: { name: "The Paranoid", color: "#f97316" },
             tourist: { name: "The Tourist", color: "#6366f1" },
             sniper: { name: "The Sniper", color: "#dc2626" },
-            lovers: { name: "Romeo & Juliet", color: "#ec4899" },
+            lovers: { name: "Romeo & Juliet", color: "#822855" },
             oracle: { name: "The Oracle", color: "#14b8a6" },
             mimic: { name: "The Mimic", color: "#a855f7" },
             lawyer: { name: "The Lawyer", color: "#3b82f6" },
@@ -2016,7 +2138,7 @@
         });
 
         // Roles help back button
-        document.getElementById('rolesHelpBack').addEventListener('click', function() {
+        document.getElementById('rolesHelpBackTop').addEventListener('click', function() {
             document.getElementById('rolesHelpScreen').classList.add('hidden');
         });
 
@@ -2164,6 +2286,17 @@
                         roleAssignments[`twinHint`] = nonImposterHints[Math.floor(Math.random() * nonImposterHints.length)];
                     }
                     rolesAssigned += 2;
+                }
+
+                else if (roleType === 'thief') {
+                    const availableCits = citizenPool.filter(p => !playerRoles[p]);
+                    if (availableCits.length > 0) {
+                        const targetCit = availableCits[0];
+                        playerRoles[targetCit] = 'thief';
+                        // The Thief knows the real word, so we don't need a special roleAssignment
+                        // They just need to listen for the imposter hint during the game
+                        rolesAssigned++;
+                    }
                 }
 
                 // --- CASE C: Standard Roles (Jester, Oracle, etc.) ---
@@ -2337,7 +2470,7 @@
                 const isLoverImposter = imposters.includes(currentPlayer);
                 wordSection = `
                     <div class="word-section">
-                        <div class="role-badge" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);">💕 Romeo & Juliet</div>
+                        <div class="role-badge" style="background: linear-gradient(135deg, #822855 0%, #db2777 100%); color: white;">💕 Romeo & Juliet</div>
                         ${isLoverImposter ? `
                             <div style="font-size: 14px; color: #a0aec0; margin-top: 10px;">Your Hint:</div>
                             <div class="hints">
@@ -2349,7 +2482,7 @@
             } else if (playerRole === 'oracle') {
                 roleInfo = `
                     <div class="role-info-top oracle">
-                        <div class="role-description-compact">Your clue MUST be exactly ONE syllable! Win with the citizens, if you survive</div>
+                        <div class="role-description-compact">Your clue MUST be exactly ONE syllable! Win with the citizens, if you survive.</div>
                     </div>
                 `;
                 
@@ -2388,20 +2521,13 @@
                     </div>
                 `;
             } else if (playerRole === 'thief') {
-                roleInfo = `
-                    <div class="role-info-top thief">
-                        <div class="role-description-compact">Win if imposters win AND you survive.</div>
-                    </div>
-                `;
-                
                 wordSection = `
                     <div class="word-section">
-                        <div class="role-badge" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">🦹 The Thief</div>
-                        <div style="font-size: 14px; color: #a0aec0; margin-top: 10px;">Imposters' Hint:</div>
-                        <div class="hints">
-                            <div class="hint-tag">${imposterHint}</div>
+                        <div class="role-badge" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">🦹 The Thief</div>
+                        <div class="word">${currentGameData.word}</div>
+                        <div class="role-info-top" style="margin-top: 15px; background: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b; color: white; padding: 10px; border-radius: 8px; font-size: 14px;">
+                            <strong>Your Mission:</strong> Listen to the clues. If the group votes for a Citizen at the end, you can win the game by correctly naming the Imposters' secret hint word!
                         </div>
-                        <div style="font-size: 13px; color: #9ca3af; margin-top: 12px; font-style: italic;">Help imposters secretly</div>
                     </div>
                 `;
             } else if (playerRole === 'twin') {

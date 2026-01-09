@@ -607,6 +607,21 @@
             background: rgba(255, 255, 255, 0.15);
         }
 
+        .team-label {
+            position: absolute;
+            bottom: 25px; /* Keeps it strictly at the bottom */
+            left: 0;
+            right: 0;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.3); /* Subtle transparency */
+            text-align: center;
+            pointer-events: none; /* Ensures it doesn't interfere with touches */
+            z-index: 5;
+        }
+
         .roles-help-screen {
             position: absolute;
             top: 0;
@@ -1320,7 +1335,7 @@
                         <span>🔮</span>
                         <span style="color: #14b8a6;">The Oracle</span>
                     </div>
-                    <div class="role-help-desc">You know the word but your clue must be ONE syllable.</div>
+                    <div class="role-help-desc">You get a range of players that includes the imposters.</div>
                     <div class="role-help-team">Citizen team</div>
                 </div>
 
@@ -1362,7 +1377,7 @@
                         <span style="color: #f59e0b;">The Thief</span>
                     </div>
                     <div class="role-help-desc">You know the real word. If the Citizens vote wrong, you can save the game by correctly guessing the Imposter's hint word!</div>
-                    <div class="role-help-team">Citizen Team - The Secret Weapon</div>
+                    <div class="role-help-team">Citizen Team</div>
                 </div>
 
                 <div class="role-help-card twin">
@@ -2228,107 +2243,172 @@
         }
 
         function assignRoles(imposterHint) {
-            // 1. Calculate how many special roles to hand out
-            const percentInput = document.getElementById('rolePercentage');
-            const percentage = percentInput ? parseInt(percentInput.value) : 33;
-            let roleCount = Math.max(1, Math.floor(totalPlayers * (percentage / 100)));
+            // 1. HARD RESET
+            // Clear everything from previous games to prevent "ghost" roles
+            playerRoles = {};
+            roleAssignments = {};
 
-            // 2. Separate players into two pools: Imposters and Citizens
-            const imposterPool = [...imposters]; 
+            // 2. CREATE BASE POOLS
+            const imposterPool = [...imposters]; // players who are definitely imposters
             const citizenPool = [];
+            
+            // Initialize EVERY player as their base type (Citizen or Imposter)
             for (let i = 1; i <= totalPlayers; i++) {
-                if (!imposters.includes(i)) {
+                if (imposters.includes(i)) {
+                    playerRoles[i] = 'imposter';
+                } else {
+                    playerRoles[i] = 'citizen';
                     citizenPool.push(i);
                 }
             }
 
-            // 3. Get and shuffle enabled roles
+            // 3. CALCULATE SPECIAL ROLE QUOTA
+            const percentInput = document.getElementById('rolePercentage');
+            const percentage = percentInput ? parseInt(percentInput.value) : 33;
+            let roleTarget = Math.max(1, Math.floor(totalPlayers * (percentage / 100)));
+
+            // 4. PREPARE ENABLED SPECIAL ROLES
             const enabledCheckboxes = document.querySelectorAll('.role-checkbox:checked');
             let roleTypes = Array.from(enabledCheckboxes).map(cb => cb.dataset.role);
-            if (roleTypes.length === 0) roleTypes = ['jester'];
             
-            // Shuffle roles
-            for (let i = roleTypes.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [roleTypes[i], roleTypes[j]] = [roleTypes[j], roleTypes[i]];
-            }
+            // Shuffle the role types so they are picked in random order
+            roleTypes = roleTypes.sort(() => Math.random() - 0.5);
 
-            let rolesAssigned = 0;
-            let loversAssigned = false;
-            let twinsAssigned = [];
+            let rolesAssignedCount = 0;
 
-            // 4. Assign roles using the shuffled roleTypes list
+            // 5. LAYER SPECIAL ROLES ON TOP
             for (let roleType of roleTypes) {
-                if (rolesAssigned >= roleCount) break;
+                if (rolesAssignedCount >= roleTarget) break;
 
-                // --- CASE A: Roles that MUST go to Imposters (Sniper) ---
+                // --- CASE A: Roles for the Imposter Pool (Sniper) ---
                 if (roleType === 'sniper') {
-                    const availableImps = imposterPool.filter(p => !playerRoles[p]);
+                    const availableImps = imposterPool.filter(p => playerRoles[p] === 'imposter');
                     if (availableImps.length > 0) {
-                        const targetImp = availableImps[Math.floor(Math.random() * availableImps.length)];
+                        const targetIdx = Math.floor(Math.random() * availableImps.length);
+                        const targetImp = availableImps[targetIdx];
                         playerRoles[targetImp] = 'sniper';
-                        rolesAssigned++;
+                        rolesAssignedCount++;
                     }
                 } 
                 
-                // --- CASE B: Roles that involve 2 players (Lovers/Twins) ---
-                // These MUST only pull from the Citizen Pool to protect the Imposter count
-                else if ((roleType === 'lovers' || roleType === 'twin') && citizenPool.filter(p => !playerRoles[p]).length >= 2) {
-                    const pool = citizenPool.filter(p => !playerRoles[p]);
-                    const p1 = pool[0];
-                    const p2 = pool[1];
-
-                    playerRoles[p1] = roleType;
-                    playerRoles[p2] = roleType;
-                    roleAssignments[p1] = p2;
-                    roleAssignments[p2] = p1;
-
-                    if (roleType === 'twin') {
-                        const nonImposterHints = currentGameData.hints.filter(h => h !== imposterHint);
-                        roleAssignments[`twinHint`] = nonImposterHints[Math.floor(Math.random() * nonImposterHints.length)];
-                    }
-                    rolesAssigned += 2;
-                }
-
-                else if (roleType === 'thief') {
-                    const availableCits = citizenPool.filter(p => !playerRoles[p]);
-                    if (availableCits.length > 0) {
-                        const targetCit = availableCits[0];
-                        playerRoles[targetCit] = 'thief';
-                        // The Thief knows the real word, so we don't need a special roleAssignment
-                        // They just need to listen for the imposter hint during the game
-                        rolesAssigned++;
-                    }
-                }
-
-                // --- CASE C: Standard Roles (Jester, Oracle, etc.) ---
-                // These MUST only pull from the Citizen Pool
+                // --- CASE B: Roles for the Citizen Pool (Everyone else) ---
                 else {
-                    const availableCits = citizenPool.filter(p => !playerRoles[p]);
-                    if (availableCits.length > 0) {
-                        const targetCit = availableCits[0];
-                        playerRoles[targetCit] = roleType;
-                        
-                        // Handle targets for Protector/Framer
-                        if (roleType === 'protector' || roleType === 'framer') {
-                            const possibleTargets = Array.from({length: totalPlayers}, (_, i) => i + 1).filter(p => p !== targetCit);
-                            roleAssignments[targetCit] = possibleTargets[Math.floor(Math.random() * possibleTargets.length)];
+                    // Find citizens who don't have a special role yet
+                    const availableCits = citizenPool.filter(p => playerRoles[p] === 'citizen');
+                    
+                    if (roleType === 'lovers') {
+                        if (availableCits.length >= 2) {
+                            const p1 = availableCits[0];
+                            const p2 = availableCits[1];
+                            playerRoles[p1] = roleType;
+                            playerRoles[p2] = roleType;
+                            roleAssignments[p1] = p2;
+                            roleAssignments[p2] = p1;
+                            rolesAssignedCount += 2;
                         }
-                        rolesAssigned++;
+                    }else if (roleType === 'twin') {
+                        // 1. Get the list of players who are currently citizens and have no special role
+                        let availableCits = citizenPool.filter(p => playerRoles[p] === 'citizen');
+                        
+                        if (availableCits.length >= 2) {
+                            // 2. SHUFFLE the available citizens so the twins aren't just the first two
+                            availableCits = availableCits.sort(() => Math.random() - 0.5);
+
+                            // 3. Pick the first two from the SHUFFLED list
+                            const p1 = availableCits[0];
+                            const p2 = availableCits[1];
+
+                            playerRoles[p1] = 'twin';
+                            playerRoles[p2] = 'twin';
+                            
+                            // Link them
+                            roleAssignments[p1] = p2;
+                            roleAssignments[p2] = p1;
+
+                            // Shared unique word logic (as established previously)
+                            const possibleTwinHints = currentGameData.hints.filter(h => 
+                                h !== currentGameData.word && 
+                                h !== imposterHint
+                            );
+                            const sharedTwinWord = possibleTwinHints[Math.floor(Math.random() * possibleTwinHints.length)] || "Double";
+                            roleAssignments[`twinWord_${p1}`] = sharedTwinWord;
+                            roleAssignments[`twinWord_${p2}`] = sharedTwinWord;
+
+                            rolesAssignedCount += 2;
+                        }
+                    }else if (roleType === 'paranoid') {
+                        if (availableCits.length > 0) {
+                            const targetCit = availableCits[0];
+                            playerRoles[targetCit] = 'paranoid';
+                            
+                            // Find a word that is a synonym but NOT the real word
+                            const synonyms = currentGameData.hints.filter(h => h !== currentGameData.word);
+                            // Store the chosen synonym in roleAssignments
+                            roleAssignments[targetCit] = synonyms[Math.floor(Math.random() * synonyms.length)];
+                            
+                            rolesAssignedCount++;
+                        }
+                    }else if (roleType === 'oracle') {
+                        if (availableCits.length > 0) {
+                            const targetCit = availableCits[0];
+                            playerRoles[targetCit] = 'oracle';
+
+                            // Get the lowest and highest imposter numbers
+                            const minImp = Math.min(...imposters);
+                            const maxImp = Math.max(...imposters);
+
+                            // Add a random "buffer" to the range so it's not too obvious
+                            // This ensures the range is slightly wider than the actual imposter spread
+                            const rangeStart = Math.max(1, minImp - Math.floor(Math.random() * 3));
+                            const rangeEnd = Math.min(totalPlayers, maxImp + Math.floor(Math.random() * 3));
+
+                            // Store this string for the Oracle to see later
+                            roleAssignments[targetCit] = `${rangeStart} and ${rangeEnd}`;
+                            
+                            rolesAssignedCount++;
+                        }
+                    } else {
+                        // Single person special roles (Jester, Thief, Tourist, Framer, Informant, etc.)
+                        if (availableCits.length > 0) {
+                            const targetCit = availableCits[0];
+                            playerRoles[targetCit] = roleType;
+                            
+                            // Handle logic for roles that need a target
+                            if (['protector', 'framer', 'lawyer'].includes(roleType)) {
+                                const possibleTargets = Array.from({length: totalPlayers}, (_, i) => i + 1)
+                                    .filter(p => p !== targetCit);
+                                roleAssignments[targetCit] = possibleTargets[Math.floor(Math.random() * possibleTargets.length)];
+                            }
+                            rolesAssignedCount++;
+                        }
                     }
                 }
             }
+            
+            console.log("Verified Role Mapping:", playerRoles);
         }
 
         function setupPlayer() {
             const isImposter = imposters.includes(currentPlayer);
-            const playerRole = playerRoles[currentPlayer];
-            const roleBadge = document.getElementById('roleBadge');
-            const wordEl = document.getElementById('word');
-            const hintContainer = document.getElementById('hintContainer');
             const playerNumEl = document.getElementById('playerNum');
             const playerNumPrefix = document.getElementById('playerNumPrefix');
-            
+            const playerRole = playerRoles[currentPlayer];
+            let teamName = "";
+            let teamColor = "";
+
+            // 1. Determine Team Name and Color
+            if (['imposter', 'sniper', 'doubleAgent'].includes(playerRole)) {
+                teamName = "Imposter Team";
+                teamColor = "#ef4444"; // Red
+            } else if (['jester', 'framer', 'mimic', 'lawyer'].includes(playerRole)) {
+                teamName = "Solo / Neutral";
+                teamColor = "#f59e0b"; // Orange/Gold
+            } else {
+                teamName = "Citizen Team";
+                teamColor = "#10b981"; // Green
+            }
+
+            // 2. Handle Player Name Display
             if (playerNames[currentPlayer]) {
                 playerNumEl.textContent = playerNames[currentPlayer];
                 playerNumPrefix.style.display = 'none';
@@ -2336,238 +2416,214 @@
                 playerNumEl.textContent = currentPlayer;
                 playerNumPrefix.style.display = 'inline';
             }
-            playerNumEl.className = `player-number-value player-color-${currentPlayer}`;
+            playerNumEl.className = `player-number-value player-color-${((currentPlayer - 1) % 20) + 1}`;
             
-            let roleInfo = '';
             let wordSection = '';
-            
-            // Handle special roles
+
+            // 3. Role-Specific Content Logic
             if (playerRole === 'jester') {
-                roleInfo = `
-                    <div class="role-info-top jester">
-                        <div class="role-description-compact">Win if YOU are voted out. You know everything.</div>
-                    </div>
-                `;
-                
                 wordSection = `
                     <div class="word-section">
                         <div class="role-badge" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">🃏 The Jester</div>
-                        <div class="word">${currentGameData.word}</div>
-                        <div style="font-size: 14px; color: #a0aec0; margin-top: 10px;">Imposters' Hint:</div>
-                        <div class="hints">
-                            <div class="hint-tag">${imposterHint}</div>
+                        <div class="word" style="font-size: 24px; color: #ef4444;">NO WORD</div>
+                        <div class="role-info-top" style="margin-top: 15px; background: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b; color: white; padding: 10px; border-radius: 8px; font-size: 14px;">
+                            <strong>Goal:</strong> Act suspicious! You win alone if the group chooses YOU as the Imposter.
                         </div>
-                    </div>
-                `;
-            } else if (playerRole === 'doubleAgent') {
-                roleInfo = `
-                    <div class="role-info-top double-agent">
-                        <div class="role-description-compact">Help imposters win. At least one must survive.</div>
-                    </div>
-                `;
-                
-                wordSection = `
-                    <div class="word-section">
-                        <div class="role-badge" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);">🕶️ Double Agent</div>
-                        <div class="word">${currentGameData.word}</div>
-                    </div>
-                `;
-            } else if (playerRole === 'protector') {
-                roleInfo = `
-                    <div class="role-info-top protector">
-                        <div class="role-description-compact">Win with the citizens ONLY if your target survives voting.</div>
-                        <div class="role-target-compact">Protect: ${getPlayerDisplay(roleAssignments[currentPlayer])}</div>
-                    </div>
-                `;
-                
-                wordSection = `
-                    <div class="word-section">
-                        <div class="role-badge" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">🛡️ The Protector</div>
-                        <div class="word">${currentGameData.word}</div>
-                    </div>
-                `;
+                    </div>`;
             } else if (playerRole === 'framer') {
-                roleInfo = `
-                    <div class="role-info-top framer">
-                        <div class="role-description-compact">Win if your target IS voted out.</div>
-                        <div class="role-target-compact">Frame: ${getPlayerDisplay(roleAssignments[currentPlayer])}</div>
-                    </div>
-                `;
-                
                 wordSection = `
                     <div class="word-section">
                         <div class="role-badge" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">🎯 The Framer</div>
                         <div class="word">${currentGameData.word}</div>
-                    </div>
-                `;
-            } else if (playerRole === 'informant') {
-                roleInfo = `
-                    <div class="role-info-top informant">
-                        <div class="role-description-compact">You know everything. Help citizens win.</div>
-                    </div>
-                `;
-                
-                wordSection = `
-                    <div class="word-section">
-                        <div class="role-badge" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">📡 The Informant</div>
-                        <div class="word">${currentGameData.word}</div>
-                        <div style="font-size: 14px; color: #a0aec0; margin-top: 10px;">Imposters' Hint:</div>
-                        <div class="hints">
-                            <div class="hint-tag">${imposterHint}</div>
+                        <div class="role-info-top" style="margin-top:10px; background:rgba(139, 92, 246, 0.1); padding:10px; border-radius:8px; border: 1px solid #8b5cf6; color: white;">
+                            <strong>Target:</strong> ${getPlayerDisplay(roleAssignments[currentPlayer])}<br>
+                            <span style="font-size:12px;">Mission: Win if your target IS voted out!</span>
                         </div>
-                    </div>
-                `;
-            } else if (playerRole === 'paranoid') {
-                const synonymWord = synonymWords[currentGameData.word] ? synonymWords[currentGameData.word][Math.floor(Math.random() * synonymWords[currentGameData.word].length)] : currentGameData.word;
-                roleInfo = `
-                    <div class="role-info-top paranoid">
-                        <div class="role-description-compact">You're a citizen. Your word is correct (trust it!).</div>
-                    </div>
-                `;
-                
+                    </div>`;
+            }else if (playerRole === 'paranoid') {
                 wordSection = `
                     <div class="word-section">
                         <div class="role-badge" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);">😰 The Paranoid</div>
-                        <div class="word">${synonymWord}</div>
-                    </div>
-                `;
-            } else if (playerRole === 'tourist') {
-                roleInfo = `
-                    <div class="role-info-top tourist">
-                        <div class="role-description-compact">You're a citizen with NO word. Blend in!</div>
-                    </div>
-                `;
-                
-                wordSection = `
-                    <div class="word-section">
-                        <div class="role-badge" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">🧳 The Tourist</div>
-                        <div style="font-size: 20px; color: #9ca3af; margin-top: 15px; font-style: italic;">You have no word</div>
-                        <div style="font-size: 14px; color: #718096; margin-top: 8px;">Listen carefully and blend in!</div>
-                    </div>
-                `;
-            } else if (playerRole === 'sniper') {
-                roleInfo = `
-                    <div class="role-info-top sniper">
-                        <div class="role-description-compact">If voted out, guess the real word to steal the win!</div>
-                    </div>
-                `;
-                
-                wordSection = `
-                    <div class="word-section">
-                        <div class="role-badge" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);">🎯 The Sniper</div>
-                        <div style="font-size: 14px; color: #a0aec0; margin-top: 10px;">Your Hint:</div>
-                        <div class="hints">
-                            <div class="hint-tag">${imposterHint}</div>
-                        </div>
-                    </div>
-                `;
-            } else if (playerRole === 'lovers') {
-                roleInfo = `
-                    <div class="role-info-top lovers">
-                        <div class="role-description-compact">Both of you must survive. Word doesn't matter.</div>
-                        <div class="role-target-compact">Partner: ${getPlayerDisplay(roleAssignments[currentPlayer])}</div>
-                    </div>
-                `;
-                
-                const isLoverImposter = imposters.includes(currentPlayer);
-                wordSection = `
-                    <div class="word-section">
-                        <div class="role-badge" style="background: linear-gradient(135deg, #822855 0%, #db2777 100%); color: white;">💕 Romeo & Juliet</div>
-                        ${isLoverImposter ? `
-                            <div style="font-size: 14px; color: #a0aec0; margin-top: 10px;">Your Hint:</div>
-                            <div class="hints">
-                                <div class="hint-tag">${imposterHint}</div>
+                        <div class="word">${roleAssignments[currentPlayer]}</div>
+                        <div class="role-info-top paranoid" style="border-color: #f97316;">
+                            <div class="role-description-compact">
+                                Your word is a <strong>synonym</strong> of the real word. 
+                                Don't let them trick you into thinking you're the enemy!
                             </div>
-                        ` : `<div class="word">${currentGameData.word}</div>`}
-                    </div>
-                `;
-            } else if (playerRole === 'oracle') {
-                roleInfo = `
-                    <div class="role-info-top oracle">
-                        <div class="role-description-compact">Your clue MUST be exactly ONE syllable! Win with the citizens, if you survive.</div>
-                    </div>
-                `;
-                
+                        </div>
+                    </div>`;
+            }else if (playerRole === 'oracle') {
                 wordSection = `
                     <div class="word-section">
                         <div class="role-badge" style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);">🔮 The Oracle</div>
                         <div class="word">${currentGameData.word}</div>
-                        <div style="font-size: 13px; color: #14b8a6; margin-top: 10px; font-weight: bold;">⚠️ One syllable only!</div>
-                    </div>
-                `;
-            } else if (playerRole === 'mimic') {
-                wordSection = `
-                    <div class="word-section">
-                        <div class="role-badge" style="background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); color: white;">🎭 The Mimic</div>
-                        <div style="font-size: 18px; color: #ef4444; margin-top: 10px; font-weight: bold;">⚠️ NO WORD ASSIGNED</div>
-                        <div class="role-info-top" style="margin-top: 15px; background: rgba(168, 85, 247, 0.1); border: 1px solid #a855f7; color: white; padding: 12px; border-radius: 8px; font-size: 14px;">
-                            <strong>Your Mission:</strong> You don't know the word. To survive, your clue must <strong>rhyme</strong> with or be a <strong>synonym</strong> of the person who speaks right before you!
+                        <div class="role-info-top oracle" style="border-color: #14b8a6;">
+                            <div class="role-description-compact">
+                                You have sensed a disturbance in the group...
+                            </div>
+                            <div class="role-target-compact" style="font-size: 14px; margin-top: 10px; color: #5eead4;">
+                                <strong>Visions:</strong> The Imposters are located between Players <strong>${roleAssignments[currentPlayer]}</strong>.
+                            </div>
+                            <div style="font-size: 11px; margin-top: 5px; color: #99f6e4; opacity: 0.8;">
+                                (The range is approximate and includes innocent Citizens!)
+                            </div>
                         </div>
-                    </div>
-                `;
-            } else if (playerRole === 'lawyer') {
-                roleInfo = `
-                    <div class="role-info-top lawyer">
-                        <div class="role-description-compact">Before voting: Choose one player to protect from elimination.</div>
-                    </div>
-                `;
-                
+                    </div>`;
+            }else if (playerRole === 'lawyer') {
                 wordSection = `
                     <div class="word-section">
                         <div class="role-badge" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">⚖️ The Lawyer</div>
                         <div class="word">${currentGameData.word}</div>
-                    </div>
-                `;
+                        <div class="role-info-top lawyer" style="border-color: #3b82f6; background: rgba(59, 130, 246, 0.1);">
+                            <div class="role-description-compact">
+                                <strong>Ability:</strong> Before the group votes, you must announce one player to protect.
+                            </div>
+                            <div style="font-size: 12px; margin-top: 8px; color: #bfdbfe;">
+                                If the group can not vote for your protected player for this round.
+                            </div>
+                        </div>
+                    </div>`;
+            }else if (playerRole === 'lovers') {
+                wordSection = `
+                    <div class="word-section">
+                        <div class="role-badge" style="background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);">❤️ The Lovers</div>
+                        <div class="word">${currentGameData.word}</div>
+                        <div class="role-info-top lovers">
+                            <div class="role-description-compact">
+                                You are linked to another player.
+                            </div>
+                            <div class="role-target-compact">
+                                Partner: ${getPlayerDisplay(roleAssignments[currentPlayer])}
+                            </div>
+                            <div style="font-size:11px; margin-top:5px; color:#fbcfe8;">
+                                If one of you is voted out, you both lose!
+                            </div>
+                        </div>
+                    </div>`;
+            } else if (playerRole === 'informant') {
+                wordSection = `
+                    <div class="word-section">
+                        <div class="role-badge" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">📡 Informant</div>
+                        <div class="word">${currentGameData.word}</div>
+                        <div style="font-size: 14px; color: #cbd5e0; margin-top: 10px;">Imposters' Hint:</div>
+                        <div class="hints"><div class="hint-tag">${imposterHint}</div></div>
+                        <div class="role-info-top" style="margin-top:10px; font-size:13px; color: white;">
+                            You know everything. Help Citizens win!
+                        </div>
+                    </div>`;
+            } else if (playerRole === 'twin') {
+                wordSection = `
+                    <div class="word-section">
+                        <div class="role-badge" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">👯 The Twins</div>
+                        <div style="font-size: 14px; color: #cbd5e0; margin-top: 10px;">Your Secret Word:</div>
+                        <div class="word" style="color: #34d399;">${roleAssignments[`twinWord_${currentPlayer}`]}</div>
+                        <div class="role-info-top twin" style="border-color: #10b981;">
+                            <div class="role-description-compact">
+                                You and your twin have a unique word. 
+                                Identify each other without alerting the group!
+                            </div>
+                        </div>
+                    </div>`;
+            } else if (playerRole === 'tourist') {
+                wordSection = `
+                    <div class="word-section">
+                        <div class="role-badge" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">📸 The Tourist</div>
+                        <div class="word">${currentGameData.word}</div>
+                        <div class="role-info-top tourist" style="border-color: #6366f1;">
+                            <div class="role-description-compact">
+                                You are just visiting! You have the real word, 
+                                but you don't know who anyone else is.
+                            </div>
+                        </div>
+                    </div>`;
             } else if (playerRole === 'thief') {
                 wordSection = `
                     <div class="word-section">
-                        <div class="role-badge" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">🦹 The Thief</div>
+                        <div class="role-badge" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">🦹 The Thief</div>
                         <div class="word">${currentGameData.word}</div>
-                        <div class="role-info-top" style="margin-top: 15px; background: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b; color: white; padding: 10px; border-radius: 8px; font-size: 14px;">
-                            <strong>Your Mission:</strong> Listen to the clues. If the group votes for a Citizen at the end, you can win the game by correctly naming the Imposters' secret hint word!
+                        <div class="role-info-top thief" style="border-color: #4b5563; background: rgba(75, 85, 99, 0.1);">
+                            <div class="role-description-compact">
+                                <strong>Ability: Identity Snatch</strong>
+                            </div>
+                            <div style="font-size: 12px; margin-top: 8px; color: #d1d5db;">
+                                If the group votes you out, <strong>you do not die.</strong> Instead, you choose one player to eliminate in your place. 
+                            </div>
+                            <div style="font-size: 11px; margin-top: 5px; color: #9ca3af; font-style: italic;">
+                                You remain in the game as a standard Citizen after the snatch.
+                            </div>
                         </div>
-                    </div>
-                `;
-            } else if (playerRole === 'twin') {
-                const twinHint = roleAssignments['twinHint'] || currentGameData.hints[0];
-                const otherTwinNum = roleAssignments[currentPlayer];
-                roleInfo = `
-                    <div class="role-info-top twin">
-                        <div class="role-description-compact">Another Twin exists. Both must survive for you to win.</div>
-                    </div>
-                `;
-                
+                    </div>`;
+            } else if (playerRole === 'mimic') {
                 wordSection = `
                     <div class="word-section">
-                        <div class="role-badge" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">👯 The Twin</div>
-                        <div class="word">${currentGameData.word}</div>
-                        <div style="font-size: 14px; color: #a0aec0; margin-top: 10px;">Twin Hint (shared):</div>
-                        <div class="hints">
-                            <div class="hint-tag">${twinHint}</div>
+                        <div class="role-badge" style="background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); color: white;">🎭 The Mimic</div>
+                        <div class="word" style="font-size: 24px; color: #ef4444;">NO WORD</div>
+                        <div class="role-info-top" style="margin-top: 15px; background: rgba(168, 85, 247, 0.1); border: 1px solid #a855f7; color: white; padding: 10px; border-radius: 8px; font-size: 13px;">
+                            <strong>Mission:</strong> Clue must <strong>rhyme</strong> or be a <strong>synonym</strong> of the person before you!
                         </div>
-                        <div style="font-size: 13px; color: #9ca3af; margin-top: 10px; font-style: italic;">Your twin doesn't know who you are</div>
-                    </div>
-                `;
+                    </div>`;
+            } else if (playerRole === 'sniper') {
+                wordSection = `
+                    <div class="word-section">
+                        <div class="role-badge" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);">🎯 The Sniper</div>
+                        <div style="font-size: 14px; color: #cbd5e0; margin-top: 10px;">Your Hint:</div>
+                        <div class="hints"><div class="hint-tag">${imposterHint}</div></div>
+                        <div class="role-info-top" style="margin-top:10px; font-size:12px; color: white;">
+                            If caught, guess the real word to steal the win!
+                        </div>
+                    </div>`;
+            } else if (playerRole === 'protector') {
+                wordSection = `
+                    <div class="word-section">
+                        <div class="role-badge" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">🛡️ Protector</div>
+                        <div class="word">${currentGameData.word}</div>
+                        <div class="role-info-top" style="margin-top:10px; font-size:13px; color: white;">
+                            <strong>Protect:</strong> ${getPlayerDisplay(roleAssignments[currentPlayer])}
+                        </div>
+                    </div>`;
+            } else if (playerRole === 'doubleAgent') {
+                wordSection = `
+                    <div class="word-section">
+                        <div class="role-badge" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);">🕶️ Double Agent</div>
+                        <div class="word">${currentGameData.word}</div>
+                        <div class="role-info-top" style="margin-top:10px; background:rgba(220,38,38,0.1); padding:8px; border-radius:5px; font-size:13px; color: white;">
+                            Mission: Help imposters win. At least one must survive.
+                        </div>
+                    </div>`;
             } else if (isImposter) {
                 wordSection = `
                     <div class="word-section">
                         <div class="role-badge role-imposter">🎭 Imposter</div>
-                        <div style="font-size: 14px; color: #a0aec0; margin-top: 10px; margin-bottom: 10px;">Your Hint:</div>
-                        <div class="hints">
-                            <div class="hint-tag">${imposterHint}</div>
-                        </div>
-                    </div>
-                `;
+                        <div style="font-size: 14px; color: #cbd5e0; margin-top: 10px; margin-bottom: 10px;">Your Hint:</div>
+                        <div class="hints"><div class="hint-tag">${imposterHint}</div></div>
+                    </div>`;
             } else {
+                // Standard Citizen
                 wordSection = `
                     <div class="word-section">
                         <div class="role-badge role-citizen">✓ Citizen</div>
                         <div class="word">${currentGameData.word}</div>
-                    </div>
-                `;
+                    </div>`;
             }
-            
-            hintContainer.innerHTML = roleInfo + wordSection;
+
+            // 4. Create the Absolute Team Label
+            const teamLabelHTML = `<div class="team-label" style="
+                position: absolute; 
+                bottom: 25px; 
+                left: 0; 
+                right: 0; 
+                text-align: center; 
+                font-size: 10px; 
+                letter-spacing: 2px; 
+                font-weight: 900; 
+                text-transform: uppercase;
+                pointer-events: none;
+                color: ${teamColor};
+                opacity: 0.5;
+            ">${teamName}</div>`;
+
+            // 5. Inject final HTML
+            document.getElementById('wordDisplay').innerHTML = wordSection + teamLabelHTML;
             
             hasRevealed = false;
             document.getElementById('nextButton').disabled = true;
